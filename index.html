@@ -95,10 +95,11 @@
 }
 .diagram{ overflow: visible; }
 .diagram img{ max-width:none; height:auto; display:block; transform-origin: top left; }
-/* SVG scale control */
+
+/* Remove zoom buttons, adjust spacing */
 .svg-scale{display:flex;align-items:center;gap:8px;margin:8px 0 12px 0;font-size:14px}
-.svg-scale input[type=range]{width:160px}
-.svg-scale .val{min-width:42px;text-align:right;font-variant-numeric:tabular-nums}
+.svg-scale input[type=range]{width:180px}
+
 
 
 /* Sortable touch placeholder */
@@ -171,7 +172,7 @@ ol.sortable, .chip{ touch-action:none; -webkit-user-select:none; user-select:non
     </p>
     <div class="grid cols-2">
       <!-- Diagramme à gauche -->
-      <div class="svg-scale" data-scope="section"><span>Échelle :</span><button type="button" class="btn" data-zoom-out title="Réduire">−</button><input type="range" min="40" max="180" step="5" value="100" data-zoom-range><button type="button" class="btn" data-zoom-in title="Agrandir">+</button><span class="val">100%</span></div><div class="diagram overlay" id="diagram2">
+      <div class="svg-scale" data-scope="section"><span>Échelle :</span><input type="range" min="40" max="180" step="5" value="100" data-zoom-range><span class="val">100%</span></div><div class="diagram overlay" id="diagram2">
         <img src="Detecteur lampe.svg" alt="Logigramme détecteur de mouvement"
              style="max-width:50%;height:auto;pointer-events:none;">
       </div>
@@ -205,7 +206,7 @@ ol.sortable, .chip{ touch-action:none; -webkit-user-select:none; user-select:non
       <div class="card">
         <p class="title">Exercice 3 — Portail électrique (QCM condition)</p>
         <p class="subtitle">But : comprendre la décision « portail fermé ? » en réponse à une <strong>demande de fermeture</strong>.</p>
-        <div class="svg-scale" data-scope="section"><span>Échelle :</span><button type="button" class="btn" data-zoom-out title="Réduire">−</button><input type="range" min="40" max="180" step="5" value="100" data-zoom-range><button type="button" class="btn" data-zoom-in title="Agrandir">+</button><span class="val">100%</span></div><div class="diagram overlay"><img src="Portail.svg" alt="Logigramme portail électrique" style="max-width:30%;height:auto;">
+        <div class="svg-scale" data-scope="section"><span>Échelle :</span><input type="range" min="40" max="180" step="5" value="100" data-zoom-range><span class="val">100%</span></div><div class="diagram overlay"><img src="Portail.svg" alt="Logigramme portail électrique" style="max-width:30%;height:auto;">
 <small></small></div>
         <div class="qcm" id="qcm3">
           <p><strong>Question :</strong> Le récepteur reçoit une <strong>demande de fermeture</strong>. Le logigramme vérifie : « le portail est‑il fermé ? ». Que se passe‑t‑il si la réponse est <em>NON</em> ?</p>
@@ -223,7 +224,7 @@ ol.sortable, .chip{ touch-action:none; -webkit-user-select:none; user-select:non
       <div class="card">
         <p class="title">Exercice 4 — Ventilation d'une salle (appariement + QCM)</p>
         <p class="subtitle">But : associer condition ↔ action, puis identifier la boucle.</p>
-        <div class="svg-scale" data-scope="section"><span>Échelle :</span><button type="button" class="btn" data-zoom-out title="Réduire">−</button><input type="range" min="40" max="180" step="5" value="100" data-zoom-range><button type="button" class="btn" data-zoom-in title="Agrandir">+</button><span class="val">100%</span></div><div class="diagram overlay"><img src="Ventilation.svg" alt="Logigramme ventilation" style="max-width:40%;height:auto;">
+        <div class="svg-scale" data-scope="section"><span>Échelle :</span><input type="range" min="40" max="180" step="5" value="100" data-zoom-range><span class="val">100%</span></div><div class="diagram overlay"><img src="Ventilation.svg" alt="Logigramme ventilation" style="max-width:40%;height:auto;">
 <small></small></div>
         <div class="grid cols-2">
           <div>
@@ -258,7 +259,7 @@ ol.sortable, .chip{ touch-action:none; -webkit-user-select:none; user-select:non
         <p class="title">Exercice 5 — Station météo (analyse & correction)</p>
         <p class="subtitle">But : repérer les incohérences d'un logigramme puis valider la logique conditionnelle.</p>
         <div class="grid cols-2">
-          <div class="svg-scale" data-scope="section"><span>Échelle :</span><button type="button" class="btn" data-zoom-out title="Réduire">−</button><input type="range" min="40" max="180" step="5" value="100" data-zoom-range><button type="button" class="btn" data-zoom-in title="Agrandir">+</button><span class="val">100%</span></div><div class="diagram overlay">
+          <div class="svg-scale" data-scope="section"><span>Échelle :</span><input type="range" min="40" max="180" step="5" value="100" data-zoom-range><span class="val">100%</span></div><div class="diagram overlay">
             <img src="Station meteo.svg" alt="Logigramme station météo" style="max-width:90%;height:auto;">
             <small></small>
           </div>
@@ -295,7 +296,7 @@ ol.sortable, .chip{ touch-action:none; -webkit-user-select:none; user-select:non
       <div class="card">
         <p class="title">Exercice 6 — Badge d'accès (appariement + QCM)</p>
         <div class="grid cols-2">
-          <div class="svg-scale" data-scope="section"><span>Échelle :</span><button type="button" class="btn" data-zoom-out title="Réduire">−</button><input type="range" min="40" max="180" step="5" value="100" data-zoom-range><button type="button" class="btn" data-zoom-in title="Agrandir">+</button><span class="val">100%</span></div><div class="diagram overlay">
+          <div class="svg-scale" data-scope="section"><span>Échelle :</span><input type="range" min="40" max="180" step="5" value="100" data-zoom-range><span class="val">100%</span></div><div class="diagram overlay">
             <img src="Badge acces.svg" alt="Logigramme badge d'accès" style="max-width:90%;height:auto;">
           </div>
           <div>
@@ -346,7 +347,7 @@ ol.sortable, .chip{ touch-action:none; -webkit-user-select:none; user-select:non
       <div class="card">
         <p class="title">Exercice 7 — Thermostat (QCM + appariement)</p>
         <div class="grid cols-2">
-          <div class="svg-scale" data-scope="section"><span>Échelle :</span><button type="button" class="btn" data-zoom-out title="Réduire">−</button><input type="range" min="40" max="180" step="5" value="100" data-zoom-range><button type="button" class="btn" data-zoom-in title="Agrandir">+</button><span class="val">100%</span></div><div class="diagram overlay"><img src="Thermostat.svg" alt="Logigramme thermostat" style="max-width:100%;height:auto;">
+          <div class="svg-scale" data-scope="section"><span>Échelle :</span><input type="range" min="40" max="180" step="5" value="100" data-zoom-range><span class="val">100%</span></div><div class="diagram overlay"><img src="Thermostat.svg" alt="Logigramme thermostat" style="max-width:100%;height:auto;">
 <small></small></div>
           <div>
             <p><strong>Associez :</strong></p>
@@ -370,7 +371,7 @@ ol.sortable, .chip{ touch-action:none; -webkit-user-select:none; user-select:non
     <section class="exercise" data-ex="8" data-points="3">
       <div class="card">
         <p class="title">Exercice 8 — Passage piéton intelligent (QCM)</p>
-        <div class="svg-scale" data-scope="section"><span>Échelle :</span><button type="button" class="btn" data-zoom-out title="Réduire">−</button><input type="range" min="40" max="180" step="5" value="100" data-zoom-range><button type="button" class="btn" data-zoom-in title="Agrandir">+</button><span class="val">100%</span></div><div class="diagram overlay"><img src="Passage pieton.svg" alt="Logigramme passage piéton" style="max-width:30%;height:auto;">
+        <div class="svg-scale" data-scope="section"><span>Échelle :</span><input type="range" min="40" max="180" step="5" value="100" data-zoom-range><span class="val">100%</span></div><div class="diagram overlay"><img src="Passage pieton.svg" alt="Logigramme passage piéton" style="max-width:30%;height:auto;">
 <small></small></div>
         <div class="qcm">
 <p>Un piéton appuie sur le bouton. Que se passe-t-il d’abord ?</p>
@@ -396,7 +397,7 @@ ol.sortable, .chip{ touch-action:none; -webkit-user-select:none; user-select:non
       <div class="card">
         <p class="title">Exercice 10 — Alerte inondation (logique seuils)</p>
         <div class="grid cols-2">
-          <div class="svg-scale" data-scope="section"><span>Échelle :</span><button type="button" class="btn" data-zoom-out title="Réduire">−</button><input type="range" min="40" max="180" step="5" value="100" data-zoom-range><button type="button" class="btn" data-zoom-in title="Agrandir">+</button><span class="val">100%</span></div><div class="diagram overlay"><img src="Alerte inondation.svg" alt="Logigramme alerte inondation" style="max-width:250%;height:auto;">
+          <div class="svg-scale" data-scope="section"><span>Échelle :</span><input type="range" min="40" max="180" step="5" value="100" data-zoom-range><span class="val">100%</span></div><div class="diagram overlay"><img src="Alerte inondation.svg" alt="Logigramme alerte inondation" style="max-width:250%;height:auto;">
 <small></div>
           <div>
             <p><strong>Associez les niveaux au comportement :</strong></p>
