@@ -100,6 +100,10 @@
 .svg-scale input[type=range]{width:160px}
 .svg-scale .val{min-width:42px;text-align:right;font-variant-numeric:tabular-nums}
 
+
+/* Sortable touch placeholder */
+.chip.placeholder{opacity:.4;border-style:dashed}
+
 </style>
 </head>
 <body>
@@ -966,6 +970,97 @@ let dragEl = null;
     try{ setupSvgScales(); }catch(e){ console.warn('svg scales error', e); }
     try{ updateScore(); }catch(e){ console.warn('updateScore error', e); }
   });
+})();
+
+
+// --- Touch sortable for EX1 (chips) ---
+(function(){
+  const isTouch = matchMedia('(pointer:coarse)').matches || 'ontouchstart' in window;
+  if(!isTouch) return; // desktop garde le DnD natif existant
+
+  const ex = document.querySelector('.exercise[data-ex="1"]');
+  if(!ex) return;
+  const list = ex.querySelector('#orderList') || ex.querySelector('ol.sortable');
+  if(!list) return;
+
+  // Ensure chips are not native-draggable on touch to avoid conflicts
+  list.querySelectorAll('.chip').forEach(ch => ch.setAttribute('draggable','false'));
+
+  let drag = null; // {chip, ghost, placeholder, startY}
+  function makeGhost(el){
+    const r = el.getBoundingClientRect();
+    const g = el.cloneNode(true);
+    g.classList.add('drag-ghost');
+    g.style.width = r.width+'px';
+    document.body.appendChild(g);
+    return g;
+  }
+  function makePlaceholder(el){
+    const ph = document.createElement('li');
+    ph.className = 'chip placeholder';
+    ph.style.height = el.getBoundingClientRect().height + 'px';
+    ph.textContent = el.textContent;
+    return ph;
+  }
+
+  function onPointerDown(e){
+    const chip = e.target.closest('.chip');
+    if(!chip || !list.contains(chip)) return;
+    if(e.pointerType && e.pointerType!=='touch' && e.pointerType!=='pen') return;
+    e.preventDefault();
+
+    drag = {
+      chip,
+      ghost: makeGhost(chip),
+      placeholder: makePlaceholder(chip),
+    };
+    chip.style.opacity = '0.2';
+    chip.classList.add('dragging');
+    chip.after(drag.placeholder);
+
+    moveGhost(e.clientX, e.clientY);
+    window.addEventListener('pointermove', onPointerMove, {passive:false});
+    window.addEventListener('pointerup', onPointerUp, {passive:false, once:true});
+  }
+
+  function moveGhost(x,y){
+    if(!drag) return;
+    drag.ghost.style.left = x+'px';
+    drag.ghost.style.top  = y+'px';
+    // Find the element under the pointer within the list
+    const el = document.elementFromPoint(x,y);
+    if(!el) return;
+    const targetChip = el.closest('.chip');
+    if(targetChip && targetChip !== drag.chip && targetChip !== drag.placeholder && list.contains(targetChip)){
+      const targetRect = targetChip.getBoundingClientRect();
+      const before = (y < targetRect.top + targetRect.height/2);
+      if(before) list.insertBefore(drag.placeholder, targetChip);
+      else list.insertBefore(drag.placeholder, targetChip.nextSibling);
+    }
+  }
+
+  function onPointerMove(e){
+    if(!drag) return;
+    e.preventDefault();
+    moveGhost(e.clientX, e.clientY);
+  }
+
+  function onPointerUp(e){
+    if(!drag) return;
+    e.preventDefault();
+    // Insert chip at placeholder position
+    if(drag.placeholder.parentNode === list){
+      list.insertBefore(drag.chip, drag.placeholder);
+    }
+    drag.chip.classList.remove('dragging');
+    drag.chip.style.opacity = '';
+    if(drag.ghost && drag.ghost.parentNode) drag.ghost.parentNode.removeChild(drag.ghost);
+    if(drag.placeholder && drag.placeholder.parentNode) drag.placeholder.parentNode.removeChild(drag.placeholder);
+    drag = null;
+    window.removeEventListener('pointermove', onPointerMove);
+  }
+
+  list.addEventListener('pointerdown', onPointerDown, {passive:false});
 })();
 
 </script>
