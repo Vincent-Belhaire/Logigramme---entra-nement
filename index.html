@@ -113,6 +113,20 @@ ol.sortable, .chip{ touch-action:none; -webkit-user-select:none; user-select:non
 /* Avoid image intercepting touches while dragging elsewhere */
 .diagram img{ pointer-events:none; }
 
+
+.svg-scale{display:none !important}
+
+.zone{cursor:pointer}
+
+/* Draggable chip inside zones (for re-placement) */
+.zone-chip{ display:inline-flex; align-items:center; gap:8px; padding:6px 8px; border-radius:8px; background:#fff; border:1px dashed var(--border, #d5d9e2); cursor:grab; user-select:none; -webkit-user-select:none; }
+.zone-chip:active{ cursor:grabbing; }
+.zone{ touch-action:none; } /* prevent scroll during drag over zones */
+
+
+/* Ensure labels pool keeps space even when empty */
+.labels{ min-height: 44px; }
+
 </style>
 </head>
 <body>
@@ -420,6 +434,43 @@ ol.sortable, .chip{ touch-action:none; -webkit-user-select:none; user-select:non
   </main>
 
   <script>
+
+// --- State normalizer: ensures labels and zones are in sync ---
+function normalizeExercise(ex){
+  const labels = Array.from(ex.querySelectorAll('.label[draggable]'));
+  const zones  = Array.from(ex.querySelectorAll('.zone[data-accept]'));
+  const zoneKeys = new Map();
+  // Pass 1: clean duplicate keys across zones, keep last occurrence
+  zones.forEach(z=>{
+    const key = z.dataset.filled || (z.querySelector('.zone-chip') && z.querySelector('.zone-chip').dataset.key);
+    if(!key) return;
+    // if key already seen in another zone, clear this duplicate
+    if(zoneKeys.has(key)){
+      z.innerHTML=''; z.classList.remove('filled'); z.removeAttribute('data-filled');
+    }else{
+      zoneKeys.set(key, z);
+      z.dataset.filled = key;
+      if(!z.querySelector('.zone-chip') && z.textContent.trim()!==''){
+        // wrap content if needed
+        z.innerHTML = '<span class="zone-chip" draggable="true" data-key="'+key+'">'+z.textContent+'</span>';
+      }
+    }
+  });
+  // Pass 2: sync pool labels visibility versus zones
+  labels.forEach(l=>{
+    const k = l.dataset.key;
+    if(zoneKeys.has(k)){
+      l.style.display='none';
+    }else{
+      l.style.display='';
+    }
+  });
+}
+
+
+// --- Global drop tracker to restore on failed drop ---
+window.__lastDropInfo = { key:null, zone:null, ts:0 };
+
     // --- Helpers & state ---
     const $ = (sel, root=document) => root.querySelector(sel);
     const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
@@ -596,7 +647,7 @@ let dragEl = null;
           if(accepted !== key) return;
           const label = dragItems.find(el=>el.dataset.key===key);
           if(!label) return;
-          zone.textContent = label.textContent;
+          zone.innerHTML = '<span class="zone-chip" draggable="true" data-key="'+key+'">'+label.textContent+'</span>';
           zone.dataset.filled = key;
           zone.classList.add('filled');
           label.style.display = 'none';
@@ -863,10 +914,15 @@ let dragEl = null;
             const prevLabel = labels.find(l=>l.dataset.key===prevKey);
             if(prevLabel) prevLabel.style.display='';
           }
-          zone.textContent = label.textContent;
+          // place chip
+          zone.innerHTML = '<span class="zone-chip" draggable="true" data-key="'+key+'">'+label.textContent+'</span>';
           zone.dataset.filled = key;
           zone.classList.add('filled');
+          // hide pool label for this key
           label.style.display='none';
+          // mark successful drop
+          window.__lastDropInfo = { key:key, zone:zone, ts:Date.now() };
+          normalizeExercise(ex);
         });
       });
     });
@@ -890,11 +946,27 @@ let dragEl = null;
       return el ? el.closest('.zone') : null;
     }
     function onPointerDown(e){
-      const label = e.target.closest('.label'); if(!label) return;
       if(e.pointerType && e.pointerType!=='touch' && e.pointerType!=='pen') return;
+      const exEl = e.target.closest('.exercise'); if(!exEl) return;
+      let label = e.target.closest('.label');
+      const zone = e.target.closest('.zone[data-accept]');
+      if(!label && zone && zone.dataset.filled){
+        // Start drag from a filled zone: unhide pool label and clear the zone
+        const key = zone.dataset.filled; if(!key){ const chip = zone.querySelector('.zone-chip'); if(chip) zone.dataset.filled = chip.dataset.key; }
+        const pool = exEl.querySelector('.label[draggable][data-key="'+key+'"]');
+        if(pool){ pool.style.display=''; label = pool; }
+        zone.textContent=''; zone.classList.remove('filled'); zone.removeAttribute('data-filled');
+    normalizeExercise(ex);
+      }
+      if(!label) return;
       e.preventDefault();
-      const ex = label.closest('.exercise');
-      dragging = {label, ex, ghost: makeGhost(label)};
+      const ex = exEl;
+      const originZone = e.target.closest('.zone[data-accept]');
+      dragging = {label, ex, ghost: makeGhost(label), originZone: originZone};
+      if(originZone && originZone.dataset.filled===label.dataset.key){
+        // clear origin zone (moving from zone)
+        originZone.textContent=''; originZone.classList.remove('filled'); originZone.removeAttribute('data-filled');
+      }
       document.body.classList.add('dragging');
       label.classList.add('dragging'); label.style.opacity='0.2';
       onPointerMove(e);
@@ -917,6 +989,7 @@ let dragEl = null;
     function onPointerUp(e){
       if(!dragging) return;
       e.preventDefault();
+      let dropped = false;
       if(currentZone && dragging.ex && currentZone.closest('.exercise')===dragging.ex){
         const labels = $$('.label', dragging.ex);
         const key = dragging.label.dataset.key;
@@ -931,9 +1004,21 @@ let dragEl = null;
           const prevLabel = labels.find(l=>l.dataset.key===prevKey);
           if(prevLabel) prevLabel.style.display='';
         }
-        currentZone.textContent = dragging.label.textContent;
+        currentZone.innerHTML = '<span class="zone-chip" draggable="true" data-key="'+key+'">'+dragging.label.textContent+'</span>';
         currentZone.dataset.filled = key;
         currentZone.classList.add('filled');
+        dragging.label.style.display='none';
+        dropped = true;
+        normalizeExercise(dragging.ex);
+      }
+      if(!dropped && dragging.originZone){
+        // restore to origin zone
+        const key = dragging.label.dataset.key;
+        const poolText = dragging.label.textContent;
+        dragging.originZone.innerHTML = '<span class="zone-chip" draggable="true" data-key="'+key+'">'+poolText+'</span>';
+        dragging.originZone.dataset.filled = key;
+        dragging.originZone.classList.add('filled');
+        normalizeExercise(dragging.ex);
         dragging.label.style.display='none';
       }
       if(currentZone){ currentZone.classList.remove('hover'); currentZone=null; }
@@ -946,40 +1031,7 @@ let dragEl = null;
   })();
 
   // --- SVG scaling controls per exercise ---
-  function setupSvgScales(){
-    $$('.exercise').forEach(ex => {
-      const exId = ex.dataset.ex;
-      const img = ex.querySelector('.diagram img');
-      const ctrl = ex.querySelector('.svg-scale');
-      if(!img || !ctrl) return;
-      const key = 'svgScale_ex' + exId;
-      const saved = Number(localStorage.getItem(key) || 100);
-      const range = ctrl.querySelector('[data-zoom-range]');
-      const outBtn = ctrl.querySelector('[data-zoom-out]');
-      const inBtn  = ctrl.querySelector('[data-zoom-in]');
-      const val    = ctrl.querySelector('.val');
-      img.style.width = 'auto';
-      function apply(v){
-        const min = Number(range.min||40), max = Number(range.max||180);
-        const clamped = Math.max(min, Math.min(max, Number(v)||100));
-        img.style.transform = 'scale(' + (clamped/100) + ')';
-        range.value = clamped;
-        val.textContent = clamped + '%';
-        localStorage.setItem(key, clamped);
-      }
-      apply(saved);
-      range.addEventListener('input', e=> apply(e.target.value));
-      outBtn.addEventListener('click', ()=> apply(Number(range.value) - Number(range.step||5)));
-      inBtn.addEventListener('click',  ()=> apply(Number(range.value) + Number(range.step||5)));
-    });
-  }
-
-  // --- Init hooks ---
-  document.addEventListener('DOMContentLoaded', function(){
-    try{ guardButtons(); }catch(e){ console.warn('guardButtons error', e); }
-    try{ setupSvgScales(); }catch(e){ console.warn('svg scales error', e); }
-    try{ updateScore(); }catch(e){ console.warn('updateScore error', e); }
-  });
+  // setupSvgScales removed);
 })();
 
 
@@ -1074,6 +1126,76 @@ let dragEl = null;
   }
 
   list.addEventListener('pointerdown', onPointerDown, {passive:false});
+})();
+
+
+// --- Allow clearing a zone by click/tap to change placement ---
+(function(){
+  document.addEventListener('click', function(e){
+    const zone = e.target.closest('.zone[data-accept]');
+    if(!zone) return;
+    const ex = zone.closest('.exercise'); if(!ex) return;
+    const key = zone.dataset.filled; if(!key){ const chip = zone.querySelector('.zone-chip'); if(chip) zone.dataset.filled = chip.dataset.key; }
+    if(!key) return; // empty zone, nothing to clear
+    const label = ex.querySelector('.label[draggable][data-key="'+key+'"]');
+    if(label){
+      label.style.display = '';
+    }
+    zone.textContent = '';
+    zone.classList.remove('filled');
+    zone.removeAttribute('data-filled');
+    normalizeExercise(ex);
+  });
+})();
+
+
+// --- Enable dragging from filled zones (desktop): .zone-chip ---
+(function(){
+  let dragFromZone = null;
+  document.addEventListener('dragstart', function(e){
+    const chip = e.target.closest('.zone-chip');
+    if(!chip) return;
+    const zone = chip.closest('.zone[data-accept]');
+    const ex = chip.closest('.exercise');
+    if(!zone || !ex) return;
+    const key = chip.dataset.key;
+    const label = ex.querySelector('.label[draggable][data-key="'+key+'"]');
+    if(label){
+      // Make pool label available to follow desktop DnD logic
+      label.style.display = '';
+      e.dataTransfer.setData('text/plain', key);
+      dragFromZone = zone;
+      // Clear origin zone right away
+      zone.textContent = '';
+      zone.classList.remove('filled');
+      zone.removeAttribute('data-filled');
+    normalizeExercise(ex);
+    }
+  });
+  document.addEventListener('dragend', function(e){
+    // If no zone registered a drop for this key recently, restore to origin
+    if(dragFromZone){
+      const key = (e.target && e.target.dataset && e.target.dataset.key) || null;
+      const info = window.__lastDropInfo || {};
+      const recent = info.key===key && (Date.now()-info.ts)<1000;
+      if(!recent){
+        const ex = dragFromZone.closest('.exercise');
+        if(ex && key){
+          const labels = $$('.label[draggable="true"]', ex);
+          const pool = labels.find(l=>l.dataset.key===key);
+          // re-fill origin zone with chip and hide pool label again
+          if(pool){
+            dragFromZone.innerHTML = '<span class="zone-chip" draggable="true" data-key="'+key+'">'+pool.textContent+'</span>';
+            dragFromZone.dataset.filled = key;
+            dragFromZone.classList.add('filled');
+            pool.style.display='none';
+          normalizeExercise(ex);
+          }
+        }
+      }
+    }
+    dragFromZone = null;
+  });
 })();
 
 </script>
