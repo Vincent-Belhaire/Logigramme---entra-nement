@@ -104,6 +104,14 @@
 /* Sortable touch placeholder */
 .chip.placeholder{opacity:.4;border-style:dashed}
 
+
+/* Prevent page scroll while dragging (tablet) */
+body.dragging{ touch-action:none; overflow:hidden; }
+/* Make EX1 sortable touch-friendly */
+ol.sortable, .chip{ touch-action:none; -webkit-user-select:none; user-select:none; }
+/* Avoid image intercepting touches while dragging elsewhere */
+.diagram img{ pointer-events:none; }
+
 </style>
 </head>
 <body>
@@ -891,6 +899,7 @@ let dragEl = null;
       onPointerMove(e);
       window.addEventListener('pointermove', onPointerMove, {passive:false});
       window.addEventListener('pointerup', onPointerUp, {passive:false, once:true});
+    window.addEventListener('pointercancel', onPointerUp, {passive:false, once:true});
     }
     function onPointerMove(e){
       if(!dragging) return;
@@ -1009,6 +1018,7 @@ let dragEl = null;
     if(e.pointerType && e.pointerType!=='touch' && e.pointerType!=='pen') return;
     e.preventDefault();
 
+    document.body.classList.add('dragging');
     drag = {
       chip,
       ghost: makeGhost(chip),
@@ -1021,6 +1031,7 @@ let dragEl = null;
     moveGhost(e.clientX, e.clientY);
     window.addEventListener('pointermove', onPointerMove, {passive:false});
     window.addEventListener('pointerup', onPointerUp, {passive:false, once:true});
+    window.addEventListener('pointercancel', onPointerUp, {passive:false, once:true});
   }
 
   function moveGhost(x,y){
@@ -1057,6 +1068,7 @@ let dragEl = null;
     if(drag.ghost && drag.ghost.parentNode) drag.ghost.parentNode.removeChild(drag.ghost);
     if(drag.placeholder && drag.placeholder.parentNode) drag.placeholder.parentNode.removeChild(drag.placeholder);
     drag = null;
+    document.body.classList.remove('dragging');
     window.removeEventListener('pointermove', onPointerMove);
   }
 
