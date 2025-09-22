@@ -9,6 +9,7 @@
       --bg:#f6f7fb; --card:#ffffff; --muted:#eef2f7; --text:#0f172a;
       --accent:#0ea5e9; --good:#16a34a; --bad:#dc2626; --warn:#d97706;
       --border:#d5d9e2;
+      --touchTarget:52px;
     }
     *{box-sizing:border-box}
     body{margin:0;background:linear-gradient(180deg,var(--bg),#ffffff);color:var(--text);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial}
@@ -36,17 +37,22 @@
     .diagram{min-height:180px;border:1px dashed var(--border);border-radius:14px;display:flex;align-items:center;justify-content:center;background:var(--muted);position:relative;color:#334155}
     .diagram small{opacity:.75; pointer-events:none}
     .diagram.overlay{background:transparent}
-    /* Sortable list */
+
+    /* Sortable (Ex1) */
     ol.sortable{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
     .chip{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:#ffffff}
     .drag{cursor:grab;opacity:.85}
     .chip.dragging{opacity:.5}
-    /* Drag & drop labels to zones */
-    .labels{display:flex;flex-wrap:wrap;gap:8px}
-    .label{padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:#ffffff;cursor:grab}
+
+    /* Drag & drop labels → zones */
+    .labels{display:flex;flex-wrap:wrap;gap:8px; min-height:44px}
+    .label{padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:#ffffff;cursor:grab;min-height:var(--touchTarget)}
     .zones{display:grid;gap:10px; position:relative; z-index:2}
-    .zone{min-height:42px;padding:8px;border:2px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:flex-start;background:transparent}
+    .zone{min-height:48px;padding:8px;border:2px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:flex-start;background:#fff; cursor:pointer; touch-action:none}
     .zone.filled{border-color:var(--accent);background:#e6f4ff}
+    .zone-chip{ display:inline-flex; align-items:center; gap:8px; padding:6px 8px; border-radius:8px; background:#fff; border:1px dashed var(--border); cursor:grab; user-select:none; -webkit-user-select:none; }
+    .zone.hover{box-shadow:0 0 0 3px rgba(14,165,233,.25) inset}
+
     /* QCM */
     .qcm{display:grid;gap:8px;margin:10px 0}
     .qcm label{display:flex;gap:10px;align-items:flex-start;padding:8px;border:1px solid var(--border);border-radius:10px;background:#ffffff;cursor:pointer}
@@ -56,37 +62,24 @@
     .right{color:var(--good)}
     .wrong{color:var(--bad)}
     .muted{opacity:.8}
-    .sol[aria-disabled="true"]{display:none}
+    .sol[arial-disabled="true"], .sol[aria-disabled="true"]{display:none}
+
+    /* Images */
     .diagram img{max-width:100%;height:auto;display:block}
     .diagram.overlay .zones{z-index:2}
     .diagram.overlay{position:relative}
     .diagram.overlay img{display:block;width:100%;height:auto;pointer-events:none;z-index:1}
-    .zones .zone{min-height:48px;background:#fff}
-    /* EX6 layout tweaks */
-    .exercise[data-ex="6"] .labels{display:flex;flex-wrap:wrap;gap:10px}
-    .exercise[data-ex="6"] .labels .label{display:inline-flex}
-    .exercise[data-ex="6"] .zones{display:grid;grid-template-columns:1fr;gap:10px}
-    .exercise[data-ex="6"] .zone{width:100%;min-height:64px}
-    .qcm .feedback{display:inline-block;margin-left:10px}
-    /* === Touch enhancements === */
-    :root{ --touchTarget: 52px; }
-    .label,.zone,.btn,.chip,.qcm label{ min-height: var(--touchTarget); }
-    .label,.zone{ touch-action:none; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
-    .drag-ghost{ position:fixed; pointer-events:none; z-index:9999; opacity:.9; transform:translate(-50%,-50%); }
+    .diagram{ overflow: visible; }
+    .diagram img{ max-width:none; height:auto; display:block; transform-origin: top left; }
+
+    /* Touch comfort */
     @media (pointer:coarse){
       .btn{ padding:14px 16px; border-radius:14px; }
       .label{ padding:12px 14px; font-size:17px; }
       .zone{ padding:12px; border-width:3px; }
       .qcm label{ padding:12px; font-size:17px; }
     }
-    .diagram{ overflow: visible; }
-    .diagram img{ max-width:none; height:auto; display:block; transform-origin: top left; }
-    .svg-scale{display:none !important}
-    .zone{cursor:pointer}
-    .zone-chip{ display:inline-flex; align-items:center; gap:8px; padding:6px 8px; border-radius:8px; background:#fff; border:1px dashed var(--border, #d5d9e2); cursor:grab; user-select:none; -webkit-user-select:none; }
-    .zone-chip:active{ cursor:grabbing; }
-    .zone{ touch-action:none; }
-    .labels{ min-height: 44px; }
+    .drag-ghost{ position:fixed; pointer-events:none; z-index:9999; opacity:.9; transform:translate(-50%,-50%); }
   </style>
 </head>
 <body>
@@ -94,7 +87,7 @@
     <div class="wrap" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
       <h1>Logigrammes – Exercices interactifs</h1>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-       <span class="pill" id="scorePill">Score : <strong id="score">0</strong> / <span id="total">0</span></span>
+        <span class="pill" id="scorePill">Score : <strong id="score">0</strong> / <span id="total">0</span></div>
         <button class="btn" id="prevBtn" aria-label="Exercice précédent">⟵ Précédent</button>
         <button class="btn primary" id="nextBtn" aria-label="Exercice suivant">Suivant ⟶</button>
         <button class="btn" id="resetBtn" title="Réinitialiser tout">Remise à zéro</button>
@@ -105,7 +98,7 @@
 
   <main class="wrap grid" style="gap:18px">
 
-    <!-- EX 1 -->
+    <!-- EX 1: Feu tricolore (ordre) -->
     <section class="exercise active" data-ex="1" data-points="10">
       <div class="card">
         <p class="title">Exercice 1 — Feu tricolore (remettre les étapes dans l'ordre)</p>
@@ -134,241 +127,285 @@
           </div>
         </div>
       </div>
-    </section>
+   </section>
 
-    <!-- EX 2 -->
-    <section class="exercise" data-ex="2" data-points="5">
-      <div class="card">
-        <h2>Exercice 2 — Détecteur de mouvement (appartement)</h2>
-        <p>But : associer chaque <strong>élément</strong> du logigramme à la bonne zone (condition, action, <em>événement</em>, temporisation, etc.).</p>
-        <div class="grid cols-2">
-          <div class="diagram overlay" id="diagram2">
-            <img src="Detecteur lampe.svg" alt="Logigramme détecteur de mouvement" style="max-width:50%;height:auto;pointer-events:none;">
-          </div>
-          <div>
-            <div class="labels" id="labels2">
-              <div class="label" draggable="true" data-key="presence">Vérifier la présence de mouvement</div>
-              <div class="label" draggable="true" data-key="allumer">Si mouvement → allumer la lampe</div>
-              <div class="label" draggable="true" data-key="attendre">Attendre 30 secondes</div>
-              <div class="label" draggable="true" data-key="eteindre">Éteindre la lampe</div>
-              <div class="label" draggable="true" data-key="boucle">Retour à l'attente</div>
-            </div>
-            <p style="margin-top:10px"><strong>Dépose ici tes étiquettes :</strong></p>
-            <div class="zones" style="display:grid;gap:10px">
-              <div class="zone" data-accept="presence" title="Vérifier mouvement ?"></div>
-              <div class="zone" data-accept="allumer" title="Allumer lampe"></div>
-              <div class="zone" data-accept="attendre" title="Attendre 30 s"></div>
-              <div class="zone" data-accept="eteindre" title="Éteindre lampe"></div>
-              <div class="zone" data-accept="boucle" title="Retour à l'attente"></div>
-            </div>
-          </div>
-        </div>
-        <div class="toolbar"><button class="btn good" data-check-match>Vérifier</button><span id="fb2" class="feedback" aria-live="polite"></span></div>
-      </div>
-    </section>
+   <!-- EX 2: Détecteur de mouvement -->
+   <section class="exercise" data-ex="2" data-points="5">
+     <div class="card">
+       <h2>Exercice 2 — Détecteur de mouvement (appartement)</h2>
+       <p>But : associer chaque <strong>élément</strong> du logigramme à la bonne zone.</p>
+       <div class="grid cols-2">
+         <div class="diagram overlay" id="diagram2">
+           <img src="Detecteur lampe.svg" alt="Logigramme détecteur de mouvement" style="max-width:50%;height:auto;pointer-events:none;">
+         </div>
+         <div>
+           <div class="labels" id="labels2">
+             <div class="label" draggable="true" data-key="presence">Vérifier la présence de mouvement</div>
+             <div class="label" draggable="true" data-key="allumer">Si mouvement → allumer la lampe</div>
+             <div class="label" draggable="true" data-key="attendre">Attendre 30 secondes</div>
+             <div class="label" draggable="true" data-key="eteindre">Éteindre la lampe</div>
+             <div class="label" draggable="true" data-key="boucle">Retour à l'attente</div>
+           </div>
+           <p style="margin-top:10px"><strong>Dépose ici tes étiquettes :</strong></p>
+           <div class="zones">
+             <div class="zone" data-accept="presence" title="Vérifier mouvement ?"></div>
+             <div class="zone" data-accept="allumer" title="Allumer lampe"></div>
+             <div class="zone" data-accept="attendre" title="Attendre 30 s"></div>
+             <div class="zone" data-accept="eteindre" title="Éteindre lampe"></div>
+             <div class="zone" data-accept="boucle" title="Retour à l'attente"></div>
+           </div>
+           <div class="toolbar">
+             <button class="btn good" data-check-match>Vérifier</button>
+             <span id="fb2" class="feedback" aria-live="polite"></span>
+           </div>
+         </div>
+       </div>
+     </div>
+   </section>
 
-    <!-- EX 3 -->
-    <section class="exercise" data-ex="3" data-points="3">
-      <div class="card">
-        <p class="title">Exercice 3 — Portail électrique (QCM condition)</p>
-        <p class="subtitle">But : comprendre la décision « portail fermé ? » en réponse à une <strong>demande de fermeture</strong>.</p>
-        <div class="diagram overlay"><img src="Portail.svg" alt="Logigramme portail électrique" style="max-width:30%;height:auto;"></div>
-        <div class="qcm" id="qcm3">
-          <p><strong>Question :</strong> Le récepteur reçoit une <strong>demande de fermeture</strong>. Le logigramme vérifie : « le portail est-il fermé ? ». Que se passe-t-il si la réponse est <em>NON</em> ?</p>
-          <label><input type="radio" name="q3" value="a"> a) Le moteur ouvre le portail</label>
-          <label><input type="radio" name="q3" value="b"> b) Le moteur ferme le portail</label>
-          <label><input type="radio" name="q3" value="c"> c) Rien ne se passe</label>
-          <div class="toolbar"><button class="btn good" data-check-qcm data-correct="b">Vérifier</button><span id="fb3" class="feedback" aria-live="polite"></span></div>
-          <details class="sol" aria-disabled="true"><summary>Afficher la solution</summary><p class="right">Réponse : b) Le moteur <strong>ferme</strong> le portail.</p></details>
-        </div>
-      </div>
-    </section>
+   <!-- EX 3 -->
+   <section class="exercise" data-ex="3" data-points="3">
+     <div class="card">
+       <p class="title">Exercice 3 — Portail électrique (QCM condition)</p>
+       <p class="subtitle">But : comprendre la décision « portail fermé ? » en réponse à une demande de fermeture.</p>
+       <div class="diagram overlay">
+         <img src="Portail.svg" alt="Logigramme portail électrique" style="max-width:30%;height:auto;">
+       </div>
+       <div class="qcm">
+         <p><strong>Question :</strong> Le récepteur reçoit une demande de fermeture. Le logigramme vérifie : « le portail est-il fermé ? ». Que se passe-t-il si la réponse est NON ?</p>
+         <label><input type="radio" name="q3" value="a"> a) Le moteur ouvre le portail</label>
+         <label><input type="radio" name="q3" value="b"> b) Le moteur ferme le portail</label>
+         <label><input type="radio" name="q3" value="c"> c) Rien ne se passe</label>
+         <div class="toolbar">
+           <button class="btn good" data-check-qcm data-correct="b">Vérifier</button>
+           <span id="fb3" class="feedback" aria-live="polite"></span>
+         </div>
+         <details class="sol" aria-disabled="true">
+           <summary>Afficher la solution</summary>
+           <p class="right">Réponse : b) Le moteur ferme le portail.</p>
+         </details>
+       </div>
+     </div>
+   </section>
 
-    <!-- EX 4 -->
-    <section class="exercise" data-ex="4" data-points="4">
-      <div class="card">
-        <p class="title">Exercice 4 — Ventilation d'une salle (appariement + QCM)</p>
-        <p class="subtitle">But : associer condition ↔ action, puis identifier la boucle.</p>
-        <div class="diagram overlay"><img src="Ventilation.svg" alt="Logigramme ventilation" style="max-width:40%;height:auto;"></div>
-        <div class="grid cols-2">
-          <div>
-            <p><strong>Associez :</strong></p>
-            <div class="grid zones" style="grid-template-columns:1fr 1fr">
-              <div class="zone" data-accept="off">CO₂ ≤ 1000 ppm →</div>
-              <div class="zone" data-accept="on">CO₂ &gt; 1000 ppm →</div>
-            </div>
-            <div class="labels" style="margin-top:10px">
-              <div class="label" draggable="true" data-key="on">Ventilation allumée</div>
-              <div class="label" draggable="true" data-key="off">Ventilation éteinte</div>
-            </div>
-          </div>
-          <div>
-            <p><strong>Bonus :</strong> Après chaque décision, que fait le système ?</p>
-            <div class="qcm" id="qcm4">
-              <label><input type="radio" name="q4" value="a"> Il recommence immédiatement</label>
-              <label><input type="radio" name="q4" value="b"> Il attend 2 minutes puis recommence</label>
-              <label><input type="radio" name="q4" value="c"> Il s'arrête</label>
-              <div class="toolbar"><button class="btn good" data-check-qcm data-correct="b">Vérifier</button><span id="fb4" class="feedback" aria-live="polite"></span></div>
-              <details class="sol" aria-disabled="true"><summary>Afficher la solution</summary><p class="right">Réponse : « attendre 2 minutes puis recommencer ».</p></details>
-            </div>
-          </div>
-        </div>
-        <div class="toolbar"><button class="btn good" data-check-match>Vérifier les appariements</button><span id="fb4m" class="feedback" aria-live="polite"></span></div>
-      </div>
-    </section>
+   <!-- EX 4 -->
+   <section class="exercise" data-ex="4" data-points="4">
+     <div class="card">
+       <p class="title">Exercice 4 — Ventilation d'une salle (appariement + QCM)</p>
+       <p class="subtitle">But : associer condition ↔ action, puis identifier la boucle.</p>
+       <div class="diagram overlay">
+         <img src="Ventilation.svg" alt="Logigramme ventilation" style="max-width:40%;height:auto;">
+       </div>
+       <div class="grid cols-2">
+         <div>
+           <p><strong>Associez :</strong></p>
+           <div class="grid zones" style="grid-template-columns:1fr 1fr">
+             <div class="zone" data-accept="off">CO₂ ≤ 1000 ppm →</div>
+             <div class="zone" data-accept="on">CO₂ &gt; 1000 ppm →</div>
+           </div>
+           <div class="labels" style="margin-top:10px">
+             <div class="label" draggable="true" data-key="on">Ventilation allumée</div>
+             <div class="label" draggable="true" data-key="off">Ventilation éteinte</div>
+           </div>
+         </div>
+         <div>
+           <p><strong>Bonus :</strong> Après chaque décision, que fait le système ?</p>
+           <div class="qcm">
+             <label><input type="radio" name="q4" value="a"> Il recommence immédiatement</label>
+             <label><input type="radio" name="q4" value="b"> Il attend 2 minutes puis recommence</label>
+             <label><input type="radio" name="q4" value="c"> Il s'arrête</label>
+             <div class="toolbar">
+               <button class="btn good" data-check-qcm data-correct="b">Vérifier</button>
+               <span id="fb4" class="feedback" aria-live="polite"></span>
+             </div>
+             <details class="sol" aria-disabled="true">
+               <summary>Afficher la solution</summary>
+               <p class="right">Réponse : « attendre 2 minutes puis recommencer ».</p>
+             </details>
+           </div>
+         </div>
+       </div>
+       <div class="toolbar">
+         <button class="btn good" data-check-match>Vérifier les appariements</button>
+         <span id="fb4m" class="feedback" aria-live="polite"></span>
+       </div>
+     </div>
+   </section>
 
-    <!-- EX 5 -->
-    <section class="exercise" data-ex="5" data-points="5">
-      <div class="card">
-        <p class="title">Exercice 5 — Station météo (analyse & correction)</p>
-        <p class="subtitle">But : repérer les incohérences d'un logigramme puis valider la logique conditionnelle.</p>
-        <div class="grid cols-2">
-          <div class="diagram overlay">
-            <img src="Station meteo.svg" alt="Logigramme station météo" style="max-width:90%;height:auto;">
-          </div>
-          <div>
-            <div style="display:grid;gap:8px;width:100%">
-              <label><input type="checkbox" class="err" value="ok1"> 1) « Vérifier s'il pleut »</label>
-              <label><input type="checkbox" class="err" value="ko1"> 2) « Si pas de pluie → fermer le store »</label>
-              <label><input type="checkbox" class="err" value="ok2"> 3) « Si pluie détectée → fermer le store »</label>
-              <label><input type="checkbox" class="err" value="ko2"> 4) « Après décision → attendre 1 heure »</label>
-              <label><input type="checkbox" class="err" value="ok3"> 5) « Boucle : attendre 1 minute puis revérifier »</label>
-            </div>
-            <p style="margin-top:10px"><strong>Question :</strong> Coche uniquement les <em>éléments incohérents</em> du pseudo-logigramme.</p>
-            <div class="toolbar"><button class="btn bad" id="checkErr">Vérifier les incohérences</button><span id="fb5" class="feedback" aria-live="polite"></span></div>
-          </div>
-        </div>
-        <hr style="border-color:#dfe6f1; margin: 20px 0;" />
-        <div class="grid cols-2">
-          <div>
-            <p><strong>Logique :</strong> Si la pluie est détectée, que doit faire le système ?</p>
-            <div class="qcm" id="qcm5">
-              <label><input type="radio" name="q5" value="a"> Ouvrir le store</label>
-              <label><input type="radio" name="q5" value="b"> Fermer le store</label>
-              <label><input type="radio" name="q5" value="c"> Allumer la lumière</label>
-              <div class="toolbar"><button class="btn good" data-check-qcm data-correct="b">Vérifier</button><span class="feedback" id="fb5q"></span></div>
-              <details class="sol" aria-disabled="true"><summary>Afficher la solution</summary><p class="right">Réponse : « Fermer le store » si pluie détectée.</p></details>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+   <!-- EX 5 -->
+   <section class="exercise" data-ex="5" data-points="5">
+     <div class="card">
+       <p class="title">Exercice 5 — Station météo (analyse & correction)</p>
+       <p class="subtitle">But : repérer les incohérences d'un logigramme puis valider la logique conditionnelle.</p>
+       <div class="grid cols-2">
+         <div class="diagram overlay">
+           <img src="Station meteo.svg" alt="Logigramme station météo" style="max-width:90%;height:auto;">
+         </div>
+         <div>
+           <div style="display:grid;gap:8px;width:100%">
+             <label><input type="checkbox" class="err" value="ok1"> 1) « Vérifier s'il pleut »</label>
+             <label><input type="checkbox" class="err" value="ko1"> 2) « Si pas de pluie → fermer le store »</label>
+             <label><input type="checkbox" class="err" value="ok2"> 3) « Si pluie détectée → fermer le store »</label>
+             <label><input type="checkbox" class="err" value="ko2"> 4) « Après décision → attendre 1 heure »</label>
+             <label><input type="checkbox" class="err" value="ok3"> 5) « Boucle : attendre 1 minute puis revérifier »</label>
+           </div>
+           <p style="margin-top:10px"><strong>Question :</strong> Coche uniquement les <em>éléments incohérents</em> du pseudo-logigramme.</p>
+           <div class="toolbar">
+             <button class="btn bad" id="checkErr">Vérifier les incohérences</button>
+             <span id="fb5" class="feedback" aria-live="polite"></span>
+           </div>
+         </div>
+       </div>
+       <hr style="border-color:#dfe6f1; margin: 20px 0;" />
+       <div class="grid cols-2">
+         <div>
+           <p><strong>Logique :</strong> Si la pluie est détectée, que doit faire le système ?</p>
+           <div class="qcm" id="qcm5">
+             <label><input type="radio" name="q5" value="a"> Ouvrir le store</label>
+             <label><input type="radio" name="q5" value="b"> Fermer le store</label>
+             <label><input type="radio" name="q5" value="c"> Allumer la lumière</label>
+             <div class="toolbar">
+               <button class="btn good" data-check-qcm data-correct="b">Vérifier</button>
+               <span class="feedback" id="fb5q"></span>
+             </div>
+             <details class="sol" aria-disabled="true">
+               <summary>Afficher la solution</summary>
+               <p class="right">Réponse : « Fermer le store » si pluie détectée.</p>
+             </details>
+           </div>
+         </div>
+       </div>
+     </div>
+   </section>
 
-    <!-- EX 6 -->
-    <section class="exercise" data-ex="6" data-points="5">
-      <div class="card">
-        <p class="title">Exercice 6 — Badge d'accès (appariement + QCM)</p>
-        <div class="grid cols-2">
-          <div class="diagram overlay">
-            <img src="Badge acces.svg" alt="Logigramme badge d'accès" style="max-width:90%;height:auto;">
-          </div>
-          <div>
-            <p><strong>Associez :</strong></p>
-            <div class="labels" style="margin-bottom: 15px;">
-              <div class="label" draggable="true" data-key="present">Badge présenté</div>
-              <div class="label" draggable="true" data-key="valide">Vérifier si le badge est valide</div>
-              <div class="label" draggable="true" data-key="ouvrir">Si valide → ouvrir le portillon</div>
-              <div class="label" draggable="true" data-key="refuser">Sinon → refuser (voyant rouge)</div>
-            </div>
-            <p><strong>Dépose ici tes étiquettes :</strong></p>
-            <div class="zones" style="display:grid;gap:10px">
-              <div class="zone" data-accept="present" title="Présence du badge ?"></div>
-              <div class="zone" data-accept="valide" title="Badge valide ?"></div>
-              <div class="zone" data-accept="ouvrir" title="Ouvrir le portillon"></div>
-              <div class="zone" data-accept="refuser" title="Refuser l'accès / voyant rouge"></div>
-            </div>
-            <div class="toolbar" style="margin-top: 15px;">
-              <button class="btn good" data-check-match>Vérifier</button>
-              <span class="feedback" id="fb6" aria-live="polite"></span>
-            </div>
-          </div>
-        </div>
-        <hr style="margin: 20px 0;">
-        <div class="qcm">
-          <p>Si le badge est <em>invalide</em>, que se passe-t-il ?</p>
-          <label><input type="radio" name="q6" value="a"> Le portillon s'ouvre</label>
-          <label><input type="radio" name="q6" value="b"> Le système ne fait rien</label>
-          <label><input type="radio" name="q6" value="c"> Un voyant rouge s'allume et l'accès est refusé</label>
-          <div class="toolbar">
-            <button class="btn good" data-check-qcm data-correct="c">Vérifier</button>
-            <span class="feedback" id="fb6q"></span>
-          </div>
-          <details class="sol" aria-disabled="true"><summary>Afficher la solution</summary>
-            <p class="right">Réponse : Un voyant rouge s'allume et l'accès est refusé.</p>
-          </details>
-        </div>
-      </div>
-    </section>
+   <!-- EX 6 -->
+   <section class="exercise" data-ex="6" data-points="5">
+     <div class="card">
+       <p class="title">Exercice 6 — Badge d'accès (appariement + QCM)</p>
+       <div class="grid cols-2">
+         <div class="diagram overlay">
+           <img src="Badge acces.svg" alt="Logigramme badge d'accès" style="max-width:90%;height:auto;">
+         </div>
+         <div>
+           <p><strong>Associez :</strong></p>
+           <div class="labels" style="margin-bottom: 15px;">
+             <div class="label" draggable="true" data-key="present">Badge présenté</div>
+             <div class="label" draggable="true" data-key="valide">Vérifier si le badge est valide</div>
+             <div class="label" draggable="true" data-key="ouvrir">Si valide → ouvrir le portillon</div>
+             <div class="label" draggable="true" data-key="refuser">Sinon → refuser (voyant rouge)</div>
+           </div>
+           <p><strong>Dépose ici tes étiquettes :</strong></p>
+           <div class="zones" style="display:grid;gap:10px">
+             <div class="zone" data-accept="present" title="Présence du badge ?"></div>
+             <div class="zone" data-accept="valide" title="Badge valide ?"></div>
+             <div class="zone" data-accept="ouvrir" title="Ouvrir le portillon"></div>
+             <div class="zone" data-accept="refuser" title="Refuser l'accès / voyant rouge"></div>
+           </div>
+           <div class="toolbar" style="margin-top: 15px;">
+             <button class="btn good" data-check-match>Vérifier</button>
+             <span class="feedback" id="fb6" aria-live="polite"></span>
+           </div>
+         </div>
+       </div>
+       <hr style="margin: 20px 0;">
+       <div class="qcm">
+         <p>Si le badge est <em>invalide</em>, que se passe-t-il ?</p>
+         <label><input type="radio" name="q6" value="a"> Le portillon s'ouvre</label>
+         <label><input type="radio" name="q6" value="b"> Le système ne fait rien</label>
+         <label><input type="radio" name="q6" value="c"> Un voyant rouge s'allume et l'accès est refusé</label>
+         <div class="toolbar">
+           <button class="btn good" data-check-qcm data-correct="c">Vérifier</button>
+           <span class="feedback" id="fb6q"></span>
+         </div>
+         <details class="sol" aria-disabled="true">
+           <summary>Afficher la solution</summary>
+           <p class="right">Réponse : Un voyant rouge s'allume et l'accès est refusé.</p>
+         </details>
+       </div>
+     </div>
+   </section>
 
-    <!-- EX 7 -->
-    <section class="exercise" data-ex="7" data-points="4">
-      <div class="card">
-        <p class="title">Exercice 7 — Thermostat (QCM + appariement)</p>
-        <div class="grid cols-2">
-          <div class="diagram overlay"><img src="Thermostat.svg" alt="Logigramme thermostat" style="max-width:100%;height:auto;"></div>
-          <div>
-            <p><strong>Associez :</strong></p>
-            <div class="grid zones" style="grid-template-columns:1fr 1fr">
-              <div class="zone" data-accept="heat">Température &lt; 19°C →</div>
-              <div class="zone" data-accept="cool">Température &gt; 24°C →</div>
-              <div class="zone" data-accept="idle">19–24°C →</div>
-            </div>
-            <div class="labels" style="margin-top:10px">
-              <div class="label" draggable="true" data-key="heat">Allumer le chauffage</div>
-              <div class="label" draggable="true" data-key="cool">Allumer la climatisation</div>
-              <div class="label" draggable="true" data-key="idle">Attendre / ne rien faire</div>
-            </div>
-            <div class="toolbar"><button class="btn good" data-check-match>Vérifier</button><span class="feedback" id="fb7"></span></div>
-          </div>
-        </div>
-      </div>
-    </section>
+   <!-- EX 7 -->
+   <section class="exercise" data-ex="7" data-points="4">
+     <div class="card">
+       <p class="title">Exercice 7 — Thermostat (QCM + appariement)</p>
+       <div class="grid cols-2">
+         <div class="diagram overlay">
+           <img src="Thermostat.svg" alt="Logigramme thermostat" style="max-width:100%;height:auto;">
+         </div>
+         <div>
+           <p><strong>Associez :</strong></p>
+           <div class="grid zones" style="grid-template-columns:1fr 1fr">
+             <div class="zone" data-accept="heat">Température &lt; 19°C →</div>
+             <div class="zone" data-accept="cool">Température &gt; 24°C →</div>
+             <div class="zone" data-accept="idle">19–24°C →</div>
+           </div>
+           <div class="labels" style="margin-top:10px">
+             <div class="label" draggable="true" data-key="heat">Allumer le chauffage</div>
+             <div class="label" draggable="true" data-key="cool">Allumer la climatisation</div>
+             <div class="label" draggable="true" data-key="idle">Attendre / ne rien faire</div>
+           </div>
+           <div class="toolbar"><button class="btn good" data-check-match>Vérifier</button><span class="feedback" id="fb7"></span></div>
+         </div>
+       </div>
+     </div>
+   </section>
 
-    <!-- EX 8 -->
-    <section class="exercise" data-ex="8" data-points="3">
-      <div class="card">
-        <p class="title">Exercice 8 — Passage piéton intelligent (QCM)</p>
-        <div class="diagram overlay"><img src="Passage pieton.svg" alt="Logigramme passage piéton" style="max-width:30%;height:auto;"></div>
-        <div class="qcm">
-          <p>Un piéton appuie sur le bouton. Que se passe-t-il d’abord ?</p>
-          <label><input type="radio" name="q8a" value="a"> Les feux voitures passent immédiatement au rouge</label>
-          <label><input type="radio" name="q8a" value="b"> Le système attend que le cycle voiture se termine puis bascule</label>
-          <label><input type="radio" name="q8a" value="c"> Rien du tout</label>
-          <div class="toolbar"><button class="btn good" data-check-qcm data-correct="b">Vérifier</button><span class="feedback" id="fb8a"></span></div>
-        </div>
-        <div class="qcm">
-          <p>Pendant la traversée piéton, que doivent afficher les feux voitures ?</p>
-          <label><input type="radio" name="q8b" value="a"> Orange clignotant</label>
-          <label><input type="radio" name="q8b" value="b"> Rouge fixe</label>
-          <label><input type="radio" name="q8b" value="c"> Vert</label>
-          <div class="toolbar"><button class="btn good" data-check-qcm data-correct="b">Vérifier</button><span class="feedback" id="fb8b"></span></div>
-        </div>
-      </div>
-    </section>
+   <!-- EX 8 -->
+   <section class="exercise" data-ex="8" data-points="3">
+     <div class="card">
+       <p class="title">Exercice 8 — Passage piéton intelligent (QCM)</p>
+       <div class="diagram overlay">
+         <img src="Passage pieton.svg" alt="Logigramme passage piéton" style="max-width:30%;height:auto;">
+       </div>
+       <div class="qcm">
+         <p>Un piéton appuie sur le bouton. Que se passe-t-il d’abord ?</p>
+         <label><input type="radio" name="q8a" value="a"> Les feux voitures passent immédiatement au rouge</label>
+         <label><input type="radio" name="q8a" value="b"> Le système attend que le cycle voiture se termine puis bascule</label>
+         <label><input type="radio" name="q8a" value="c"> Rien du tout</label>
+         <div class="toolbar">
+           <button class="btn good" data-check-qcm data-correct="b">Vérifier</button>
+           <span class="feedback" id="fb8a"></span>
+         </div>
+       </div>
+       <div class="qcm">
+         <p>Pendant la traversée piéton, que doivent afficher les feux voitures ?</p>
+         <label><input type="radio" name="q8b" value="a"> Orange clignotant</label>
+         <label><input type="radio" name="q8b" value="b"> Rouge fixe</label>
+         <label><input type="radio" name="q8b" value="c"> Vert</label>
+         <div class="toolbar">
+           <button class="btn good" data-check-qcm data-correct="b">Vérifier</button>
+           <span class="feedback" id="fb8b"></span>
+         </div>
+       </div>
+     </div>
+   </section>
 
-    <!-- EX 10 -->
-    <section class="exercise" data-ex="10" data-points="4">
-      <div class="card">
-        <p class="title">Exercice 10 — Alerte inondation (logique seuils)</p>
-        <div class="grid cols-2">
-          <div class="diagram overlay"><img src="Alerte inondation.svg" alt="Logigramme alerte inondation" style="max-width:250%;height:auto;"></div>
-          <div>
-            <p><strong>Associez les niveaux au comportement :</strong></p>
-            <div class="grid zones" style="grid-template-columns:1fr 1fr">
-              <div class="zone" data-accept="safe">Niveau &lt; 20% →</div>
-              <div class="zone" data-accept="warn">Niveau 20–60% →</div>
-              <div class="zone" data-accept="alarm">Niveau &gt; 60% →</div>
-            </div>
-            <div class="labels" style="margin-top:10px">
-              <div class="label" draggable="true" data-key="safe">Surveillance simple</div>
-              <div class="label" draggable="true" data-key="warn">Alerte visuelle locale</div>
-              <div class="label" draggable="true" data-key="alarm">Sirène + notification</div>
-            </div>
-            <div class="toolbar"><button class="btn good" data-check-match>Vérifier</button><span class="feedback" id="fb10"></span></div>
-          </div>
-        </div>
-      </div>
-    </section>
+   <!-- EX 10 -->
+   <section class="exercise" data-ex="10" data-points="4">
+     <div class="card">
+       <p class="title">Exercice 10 — Alerte inondation (logique seuils)</p>
+       <div class="grid cols-2">
+         <div class="diagram overlay">
+           <img src="Alerte inondation.svg" alt="Logigramme alerte inondation" style="max-width:250%;height:auto;">
+         </div>
+         <div>
+           <p><strong>Associez les niveaux au comportement :</strong></p>
+           <div class="grid zones" style="grid-template-columns:1fr 1fr">
+             <div class="zone" data-accept="safe">Niveau &lt; 20% →</div>
+             <div class="zone" data-accept="warn">Niveau 20–60% →</div>
+             <div class="zone" data-accept="alarm">Niveau &gt; 60% →</div>
+           </div>
+           <div class="labels" style="margin-top:10px">
+             <div class="label" draggable="true" data-key="safe">Surveillance simple</div>
+             <div class="label" draggable="true" data-key="warn">Alerte visuelle locale</div>
+             <div class="label" draggable="true" data-key="alarm">Sirène + notification</div>
+           </div>
+           <div class="toolbar"><button class="btn good" data-check-match>Vérifier</button><span class="feedback" id="fb10"></span></div>
+         </div>
+       </div>
+     </div>
+   </section>
 
   </main>
 
@@ -396,20 +433,14 @@
     localStorage.setItem('logi_version', APP_VERSION);
   }
 
-  function totalPoints(){
-    return exercises.reduce((s,ex)=>s+Number(ex.dataset.points||0),0);
-  }
+  function totalPoints(){ return exercises.reduce((s,ex)=>s+Number(ex.dataset.points||0),0); }
   totalEl.textContent = totalPoints();
 
   function save(){ localStorage.setItem('logi_results', JSON.stringify(results)); localStorage.setItem('logi_version', APP_VERSION); }
-
-  function updateScore(){
-    const sum = Object.values(results).reduce((a,b)=>a+Number(b||0),0);
-    scoreEl.textContent = sum;
-  }
+  function updateScore(){ const sum = Object.values(results).reduce((a,b)=>a+Number(b||0),0); scoreEl.textContent = sum; }
 
   function unlockSolutions(ex){
-    $$( 'details.sol[aria-disabled="true"]', ex ).forEach(d=>d.setAttribute('aria-disabled','false'));
+    $$('details.sol[aria-disabled="true"]', ex).forEach(d=>d.setAttribute('aria-disabled','false'));
     $$('details.sol', ex).forEach(d=>{ if(d.getAttribute('aria-disabled')==='false'){ d.style.display='block'; } });
   }
 
@@ -418,10 +449,7 @@
     current=i;
     prevBtn.disabled = i===0;
     nextBtn.disabled = i===exercises.length-1;
-    setTimeout(()=>{
-      const t = exercises[i].querySelector('.title');
-      if(t) t.scrollIntoView({behavior:'smooth',block:'start'});
-    },50);
+    setTimeout(()=>{ const t = exercises[i].querySelector('.title'); if(t) t.scrollIntoView({behavior:'smooth',block:'start'}); },50);
   }
 
   prevBtn.addEventListener('click',()=>show(Math.max(0,current-1)));
@@ -443,18 +471,19 @@
     setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
   });
 
-  // --- EX1: ordre (shuffle + DnD bureau) ---
+  // --- EX1: ordre (shuffle + DnD desktop) ---
   (function(){
-    const list = $('#orderList');
-    if(!list) return;
+    const list = $('#orderList'); if(!list) return;
     const items = Array.from(list.querySelectorAll('.chip'));
     const correctOrder = ['1','2','3','4','5','6','7','8','9','10'];
-    function shuffleArray(arr){ const a = arr.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
+
+    function shuffleArray(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
     let shuffled = shuffleArray(items), attempt=0;
     while (shuffled.map(li => li.dataset.key).join(',') === correctOrder.join(',') && attempt < 5) {
       shuffled = shuffleArray(items); attempt++;
     }
     shuffled.forEach(el=>list.appendChild(el));
+
     let dragEl = null;
     list.addEventListener('dragstart', (e)=>{ const li=e.target.closest('.chip'); if(!li) return; dragEl=li; li.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; });
     list.addEventListener('dragend', (e)=>{ const li=e.target.closest('.chip'); if(li) li.classList.remove('dragging'); dragEl=null; });
@@ -467,31 +496,28 @@
     function getDragAfterEl(container, y){
       const els = [...container.querySelectorAll('.chip:not(.dragging)')];
       return els.reduce((closest, child)=>{
-        const box = child.getBoundingClientRect(); const offset = y - box.top - box.height/2;
-        if(offset < 0 && offset > closest.offset) return {offset:offset, element:child}; else return closest;
+        const box=child.getBoundingClientRect(); const offset=y - box.top - box.height/2;
+        if(offset < 0 && offset > closest.offset) return {offset:offset, element:child};
+        else return closest;
       }, {offset:Number.NEGATIVE_INFINITY}).element;
     }
     $('[data-check-order]').addEventListener('click',()=>{
       const order = [...list.querySelectorAll('.chip')].map(li=>li.dataset.key);
       const correct = order.join(',') === correctOrder.join(',');
-      const ex = list.closest('.exercise');
-      const id = ex.dataset.ex;
-      const resKey = 'ex' + id + '_order';
-   const maxPts = Number(ex.dataset.points) || 0;
-      const prev = Number(results[resKey] || 0);
-      if(maxPts > 0 && prev >= maxPts){
+      const ex = list.closest('.exercise'); const id = ex.dataset.ex; const resKey = 'ex' + id + '_order';
+      if(Object.prototype.hasOwnProperty.call(results, resKey)){
         const fb = $('#fb1'); if(fb){ fb.textContent='Déjà validé.'; fb.className='feedback good'; }
         return;
       }
-      const pts = correct ? maxPts : 0;
-      if(pts > prev){ results[resKey] = pts; save(); updateScore(); }
+      const pts = correct ? Number(ex.dataset.points) : 0;
+      results[resKey] = pts; save(); updateScore();
       const fb = $('#fb1');
       if(fb){ fb.textContent = correct ? '✓ Bon ordre !' : '✗ Ordre incorrect. Réessaie.'; fb.className = 'feedback ' + (correct ? 'good' : 'bad'); }
       if(correct) unlockSolutions(ex);
     });
   })();
 
-  // --- EX2/4/6/7/10: matching (bureau) ---
+  // --- EX2/4/6/7/10: matching (desktop) ---
   (function(){
     const dragItems = $$('.label[draggable="true"]');
     let dragSrc = null;
@@ -505,14 +531,17 @@
       zone.addEventListener('drop', e=>{
         e.preventDefault();
         const key = e.dataTransfer.getData('text/plain'); if(!key) return;
-        const label = dragItems.find(el=>el.dataset.key===key); if(!label) return;
-        // swap: libère l’ancienne zone de cette étiquette
         const ex = zone.closest('.exercise');
+        const label = ex.querySelector('.label[draggable][data-key="'+key+'"]'); if(!label) return;
+        // free previous place of this key
         const occupied = ex.querySelector(`.zone[data-filled="${key}"]`);
         if(occupied && occupied !== zone){ occupied.textContent=''; occupied.classList.remove('filled'); occupied.removeAttribute('data-filled'); }
-        // remet l’occupant précédent de la zone dans le pool
-        const prevKey = zone.dataset.filled;
-        if(prevKey){ const prevLabel = ex.querySelector('.label[draggable][data-key="'+prevKey+'"]'); if(prevLabel) prevLabel.style.display=''; }
+        // swap out previous occupant of this zone
+        const prevKey = zone.dataset.filled || (zone.querySelector('.zone-chip') && zone.querySelector('.zone-chip').dataset.key);
+        if(prevKey){
+          const prevLabel = ex.querySelector('.label[draggable][data-key="'+prevKey+'"]');
+          if(prevLabel) prevLabel.style.display='';
+        }
         zone.innerHTML = '<span class="zone-chip" draggable="true" data-key="'+key+'">'+label.textContent+'</span>';
         zone.dataset.filled = key; zone.classList.add('filled');
         label.style.display='none';
@@ -522,15 +551,13 @@
       btn.addEventListener('click', e=>{
         const ex = e.target.closest('.exercise'); if(!ex) return;
         const id = ex.dataset.ex; const resKey = 'ex' + id + '_match';
-       const maxPts = Number(ex.dataset.points) || 0;
-        const prev = Number(results[resKey] || 0);
-        if(maxPts > 0 && prev >= maxPts){
+        if(Object.prototype.hasOwnProperty.call(results, resKey)){
           const fb = ex.querySelector('.feedback'); if(fb){ fb.textContent='Déjà validé.'; fb.className='feedback good'; } return;
         }
         const zones = $$('.zone[data-accept]', ex);
         const correct = zones.every(z => z.dataset.filled === z.dataset.accept);
-        const pts = correct ? maxPts : 0;
-        if(pts > prev){ results[resKey] = pts; save(); updateScore(); }
+        const pts = correct ? Number(ex.dataset.points) : 0;
+        results[resKey] = pts; save(); updateScore();
         const fb = ex.querySelector('.feedback');
         if(fb){ fb.textContent = correct ? '✓ Bon appariement !' : '✗ Appariement incorrect. Réessaie.'; fb.className = 'feedback ' + (correct?'good':'bad'); }
         if(correct) unlockSolutions(ex);
@@ -538,35 +565,34 @@
     });
   })();
 
-  // --- EX3/4/5/6/8: QCM + score 1er essai ---
+  // --- EX3/4/5/6/8: QCM (score au premier essai) ---
   (function(){
     $$('[data-check-qcm]').forEach(btn=>{
       btn.addEventListener('click', e=>{
         const qcm = e.target.closest('.qcm'); const ex = e.target.closest('.exercise');
         if(!qcm || !ex) return;
-        const id  = ex.dataset.ex;
-        const correct = e.target.dataset.correct;
+        const id  = ex.dataset.ex; const correct = e.target.dataset.correct;
         const radios = qcm.querySelectorAll('input[type=radio]');
         const selected = Array.from(radios).find(r=>r.checked);
         const isCorrect = !!selected && selected.value === correct;
+
         const fbEl = qcm.querySelector('.feedback');
         const fbId = fbEl && fbEl.id ? fbEl.id : ( 'fb' + id + 'q' );
         const resKey = 'ex' + fbId.replace(/^fb/, '');
-         const maxPts = Number(ex.dataset.points) || 0;
-        const prev = Number(results[resKey] || 0);
-        if(maxPts > 0 && prev >= maxPts){
-          if(fbEl){ fbEl.textContent = 'Déjà validé.'; fbEl.className='feedback good'; }
+
+        if(Object.prototype.hasOwnProperty.call(results, resKey)){
+          if(fbEl){ fbEl.textContent = isCorrect ? 'Déjà validé.' : 'Déjà validé (score figé).'; fbEl.className='feedback ' + (isCorrect?'good':'bad'); }
           return;
         }
-       const pts = isCorrect ? maxPts : 0;
-        if(pts > prev){ results[resKey] = pts; save(); updateScore(); }
+        const pts = isCorrect ? Number(ex.dataset.points) : 0;
+        results[resKey] = pts; save(); updateScore();
         if(fbEl){ fbEl.textContent = isCorrect ? '✓ Bonne réponse !' : '✗ Réponse incorrecte. Réessaie.'; fbEl.className='feedback ' + (isCorrect?'good':'bad'); }
         if(isCorrect) unlockSolutions(ex);
       });
     });
   })();
 
-  // --- EX5: détection d'erreurs (clé corrigée pour le score) ---
+  // --- EX5: incohérences (clé corrigée) ---
   (function(){
     const btn = $('#checkErr'); if(!btn) return;
     btn.addEventListener('click',()=>{
@@ -574,7 +600,7 @@
       const checks = $$('.err:checked', ex);
       const correct = checks.length===2 && checks[0].value==='ko1' && checks[1].value==='ko2';
       const pts = correct ? Number(ex.dataset.points) : 0;
-      results['ex'+id+'_err'] = pts; // <-- clé corrigée
+      results['ex'+id+'_err'] = pts;  // clé corrigée
       save(); updateScore();
       const fb = $('#fb5');
       if(fb){ fb.textContent = correct ? '✓ Erreurs bien identifiées !' : '✗ Pas tout à fait. Réessaie.'; fb.className = 'feedback ' + (correct ? 'good' : 'bad'); }
@@ -582,7 +608,7 @@
     });
   })();
 
-  // --- Touch sortable for EX1 ---
+  // --- Touch sortable pour EX1 (liste) ---
   (function(){
     const isTouch = matchMedia('(pointer:coarse)').matches || 'ontouchstart' in window;
     if(!isTouch) return;
@@ -592,13 +618,15 @@
     let drag = null;
     function makeGhost(el){ const r=el.getBoundingClientRect(); const g=el.cloneNode(true); g.classList.add('drag-ghost'); g.style.width=r.width+'px'; document.body.appendChild(g); return g; }
     function makePlaceholder(el){ const ph=document.createElement('li'); ph.className='chip placeholder'; ph.style.height=el.getBoundingClientRect().height+'px'; ph.textContent=el.textContent; return ph; }
-    function moveGhost(x,y,placeholder){
+    function moveGhost(x,y){
+      if(!drag) return;
       drag.ghost.style.left = x+'px'; drag.ghost.style.top  = y+'px';
       const el = document.elementFromPoint(x,y); if(!el) return;
       const targetChip = el.closest('.chip');
-      if(targetChip && targetChip !== drag.chip && targetChip !== placeholder && list.contains(targetChip)){
-        const r = targetChip.getBoundingClientRect(); const before = (y < r.top + r.height/2);
-        if(before) list.insertBefore(placeholder, targetChip); else list.insertBefore(placeholder, targetChip.nextSibling);
+      if(targetChip && targetChip !== drag.chip && targetChip !== drag.placeholder && list.contains(targetChip)){
+        const r = targetChip.getBoundingClientRect();
+        const before = (y < r.top + r.height/2);
+        if(before) list.insertBefore(drag.placeholder, targetChip); else list.insertBefore(drag.placeholder, targetChip.nextSibling);
       }
     }
     function onPointerDown(e){
@@ -606,15 +634,14 @@
       if(e.pointerType && e.pointerType!=='touch' && e.pointerType!=='pen') return;
       e.preventDefault();
       document.body.classList.add('dragging');
-      const ph = makePlaceholder(chip);
-      drag = {chip, ghost: makeGhost(chip), placeholder: ph};
-      chip.style.opacity = '0.2'; chip.classList.add('dragging'); chip.after(ph);
-      moveGhost(e.clientX, e.clientY, ph);
+      drag = {chip, ghost: makeGhost(chip), placeholder: makePlaceholder(chip)};
+      chip.style.opacity = '0.2'; chip.classList.add('dragging'); chip.after(drag.placeholder);
+      moveGhost(e.clientX, e.clientY);
       window.addEventListener('pointermove', onPointerMove, {passive:false});
       window.addEventListener('pointerup', onPointerUp, {passive:false, once:true});
       window.addEventListener('pointercancel', onPointerUp, {passive:false, once:true});
     }
-    function onPointerMove(e){ if(!drag) return; e.preventDefault(); moveGhost(e.clientX, e.clientY, drag.placeholder); }
+    function onPointerMove(e){ if(!drag) return; e.preventDefault(); moveGhost(e.clientX, e.clientY); }
     function onPointerUp(e){
       if(!drag) return; e.preventDefault();
       if(drag.placeholder.parentNode === list){ list.insertBefore(drag.chip, drag.placeholder); }
@@ -626,32 +653,30 @@
     list.addEventListener('pointerdown', onPointerDown, {passive:false});
   })();
 
-  // --- Tap pour vider une zone (replacer l’étiquette au pool) ---
+  // --- Click/Tap pour vider une zone (remettre l'étiquette au pool) ---
   (function(){
     document.addEventListener('click', function(e){
       const zone = e.target.closest('.zone[data-accept]'); if(!zone) return;
       const ex = zone.closest('.exercise'); if(!ex) return;
       const key = zone.dataset.filled || (zone.querySelector('.zone-chip') && zone.querySelector('.zone-chip').dataset.key);
       if(!key) return;
-      const label = ex.querySelector('.label[draggable][data-key="'+key+'"]'); if(label) label.style.display='';
-      zone.textContent = ''; zone.classList.remove('filled'); zone.removeAttribute('data-filled');
+      const label = ex.querySelector('.label[draggable][data-key="'+key+'"]');
+      if(label) label.style.display='';
+      zone.textContent=''; zone.classList.remove('filled'); zone.removeAttribute('data-filled');
     });
   })();
 
-  // --- Drag depuis une zone remplie (bureau) ---
+  // --- Drag depuis une zone (desktop) : permet de reprendre une vignette déjà posée ---
   (function(){
-    let dragFromZone = null;
     document.addEventListener('dragstart', function(e){
       const chip = e.target.closest('.zone-chip'); if(!chip) return;
       const zone = chip.closest('.zone[data-accept]'); const ex = chip.closest('.exercise'); if(!zone||!ex) return;
       const key = chip.dataset.key; const label = ex.querySelector('.label[draggable][data-key="'+key+'"]');
       if(label){
-        label.style.display=''; e.dataTransfer.setData('text/plain', key); dragFromZone = zone;
+        label.style.display='';
+        e.dataTransfer.setData('text/plain', key);
         zone.textContent=''; zone.classList.remove('filled'); zone.removeAttribute('data-filled');
       }
-    });
-    document.addEventListener('dragend', function(e){
-      if(!dragFromZone) return; dragFromZone=null;
     });
   })();
 
@@ -679,26 +704,24 @@
           let m = k.match(/^ex(1)_order$/);
           if(m){ const key=`ex${m[1]}_order`; if(!taken.has(key)){ sum+=Math.min(Number(v)||0, ORDER_POINTS[m[1]]||0); taken.add(key);} continue; }
           m = k.match(/^ex(2|4|6|7|10)_match$/);
-          if(m){ const exId=m[1], key=`ex${exId}_match`; if(!taken.has(key)){ sum+=Math.min(Number(v)||0, MATCH_POINTS[exId]||0); taken.add(key);} continue; }
+          if(m){ const id=m[1], key=`ex${id}_match`; if(!taken.has(key)){ sum+=Math.min(Number(v)||0, MATCH_POINTS[id]||0); taken.add(key);} continue; }
           if(k==='ex5_err' && !taken.has('ex5_err')){ sum+=Math.min(Number(v)||0, ERR_POINTS['5']||0); taken.add('ex5_err'); continue; }
           if(QCM_POINTS.hasOwnProperty(k) && !taken.has(k)){ sum+=Math.min(Number(v)||0, QCM_POINTS[k]||0); taken.add(k); continue; }
         }
         return sum;
       }
-
       function totalPoints(){
         try{
           return Array.from(document.querySelectorAll('.exercise')).reduce((s,ex)=>s+Number(ex.dataset.points||0),0);
         }catch(e){ return 0; }
       }
-
       function redrawScore(){
         let res={}; try{ res = window.results || JSON.parse(localStorage.getItem('logi_results')||'{}'); }catch(e){}
         const sum = computeAggregatedScore(res); const total = totalPoints();
         const scoreEl=document.getElementById('score'); const totalEl=document.getElementById('total');
         if(scoreEl) scoreEl.textContent=sum; if(totalEl) totalEl.textContent=total;
+        const pb=document.getElementById('progressBar'); if(pb&&total){ pb.style.width=((sum/total)*100)+'%'; }
       }
-
       const prev = window.updateScore;
       window.updateScore = function(){ try{ if(typeof prev==='function') prev(); }catch(e){} redrawScore(); };
       redrawScore();
@@ -706,6 +729,141 @@
         if(e.target.matches('[data-check-order],[data-check-match],[data-check-qcm],#checkErr,#resetBtn')){ setTimeout(redrawScore, 80); }
       }, {passive:true});
     });
+  })();
+  </script>
+
+  <!-- ===== Touch DnD pour ÉTIQUETTES (labels ↔ zones) — s'active uniquement sur tablette/mobile ===== -->
+  <script>
+  (function(){
+    const isTouch = matchMedia('(pointer:coarse)').matches || 'ontouchstart' in window;
+    if(!isTouch) return;
+
+    const $ = (s, r=document)=>r.querySelector(s);
+    const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
+
+    // Désactive le DnD natif des labels qui est peu fiable sur iOS/Android
+    document.querySelectorAll('.label[draggable="true"]').forEach(l=> l.setAttribute('draggable','false'));
+
+    let dragging = null; // {ex, key, label, ghost, originZone|null}
+    let overZone = null;
+
+    function makeGhost(el){
+      const r = el.getBoundingClientRect();
+      const g = el.cloneNode(true);
+      g.classList.add('drag-ghost');
+      g.style.width = r.width+'px';
+      g.style.left = r.left+'px';
+      g.style.top  = r.top +'px';
+      document.body.appendChild(g);
+      return g;
+    }
+    function zoneFromPoint(x,y){
+      const el = document.elementFromPoint(x,y);
+      return el ? el.closest('.zone[data-accept]') : null;
+    }
+    function moveGhost(x,y){
+      if(!dragging) return;
+      dragging.ghost.style.left = x+'px';
+      dragging.ghost.style.top  = y+'px';
+      const z = zoneFromPoint(x,y);
+      if(z !== overZone){
+        if(overZone) overZone.classList.remove('hover');
+        overZone = (z && z.closest('.exercise')===dragging.ex) ? z : null;
+        if(overZone) overZone.classList.add('hover');
+      }
+    }
+
+    function startFromPool(label, e){
+      const ex = label.closest('.exercise');
+      dragging = { ex, key: label.dataset.key, label, ghost: makeGhost(label), originZone: null };
+      label.style.opacity='0.25';
+      document.body.classList.add('dragging');
+      moveGhost(e.clientX, e.clientY);
+    }
+    function startFromZone(chip, e){
+      const zone = chip.closest('.zone[data-accept]');
+      const ex   = chip.closest('.exercise');
+      const key  = chip.dataset.key;
+      const pool = ex.querySelector('.labels .label[data-key="'+key+'"]');
+      if(pool) pool.style.display='';
+      zone.textContent=''; zone.classList.remove('filled'); zone.removeAttribute('data-filled');
+      dragging = { ex, key, label: pool||null, ghost: makeGhost(chip), originZone: zone };
+      document.body.classList.add('dragging');
+      moveGhost(e.clientX, e.clientY);
+    }
+
+    // Pointer handlers
+    function onMove(e){ if(!dragging) return; e.preventDefault(); moveGhost(e.clientX, e.clientY); }
+    function onUp(e){
+      e.preventDefault();
+      const {ex,key,label,ghost,originZone} = dragging||{};
+      let placed=false;
+      if(overZone && overZone.closest('.exercise')===ex){
+        // Remet l'ancien occupant de la zone dans le pool
+        const prevKey = overZone.dataset.filled || (overZone.querySelector('.zone-chip') && overZone.querySelector('.zone-chip').dataset.key);
+        if(prevKey){
+          const prevLabel = ex.querySelector('.labels .label[data-key="'+prevKey+'"]');
+          if(prevLabel) prevLabel.style.display='';
+        }
+        // Libère l'ancienne zone du même key
+        const old = ex.querySelector('.zone[data-filled="'+key+'"]');
+        if(old){ old.textContent=''; old.classList.remove('filled'); old.removeAttribute('data-filled'); }
+        // Pose le chip
+        const txt = label ? label.textContent : key;
+        overZone.innerHTML = '<span class="zone-chip" draggable="true" data-key="'+key+'">'+txt+'</span>';
+        overZone.dataset.filled=key; overZone.classList.add('filled');
+        if(label) label.style.display='none';
+        placed = true;
+      }
+      // Restaure si lâché ailleurs et provenait d'une zone
+      if(!placed && originZone){
+        const pool = ex.querySelector('.labels .label[data-key="'+key+'"]');
+        const txt  = pool ? pool.textContent : key;
+        originZone.innerHTML = '<span class="zone-chip" draggable="true" data-key="'+key+'">'+txt+'</span>';
+        originZone.dataset.filled=key; originZone.classList.add('filled');
+        if(pool) pool.style.display='none';
+      }
+      if(overZone){ overZone.classList.remove('hover'); overZone=null; }
+      if(label) label.style.opacity='';
+      if(ghost && ghost.parentNode) ghost.parentNode.removeChild(ghost);
+      document.body.classList.remove('dragging');
+      dragging=null;
+      window.removeEventListener('pointermove', onMove);
+    }
+
+    // Démarrage depuis le pool
+    document.addEventListener('pointerdown', function(e){
+      if(!(e.pointerType==='touch' || e.pointerType==='pen')) return;
+      const label = e.target.closest('.label'); if(!label) return;
+      e.preventDefault();
+      startFromPool(label, e);
+      window.addEventListener('pointermove', onMove, {passive:false});
+      window.addEventListener('pointerup', onUp, {passive:false, once:true});
+      window.addEventListener('pointercancel', onUp, {passive:false, once:true});
+    }, {passive:false});
+
+    // Démarrage depuis une zone remplie
+    document.addEventListener('pointerdown', function(e){
+      if(!(e.pointerType==='touch' || e.pointerType==='pen')) return;
+      const chip = e.target.closest('.zone-chip'); if(!chip) return;
+      e.preventDefault();
+      startFromZone(chip, e);
+      window.addEventListener('pointermove', onMove, {passive:false});
+      window.addEventListener('pointerup', onUp, {passive:false, once:true});
+      window.addEventListener('pointercancel', onUp, {passive:false, once:true});
+    }, {passive:false});
+
+    // Tap pour vider une zone (remettre l'étiquette au pool)
+    document.addEventListener('click', function(e){
+      const zone = e.target.closest('.zone[data-accept]');
+      if(!zone || dragging) return;
+      const ex = zone.closest('.exercise'); if(!ex) return;
+      const key = zone.dataset.filled || (zone.querySelector('.zone-chip') && zone.querySelector('.zone-chip').dataset.key);
+      if(!key) return;
+      const label = ex.querySelector('.labels .label[data-key="'+key+'"]');
+      if(label) label.style.display='';
+      zone.textContent=''; zone.classList.remove('filled'); zone.removeAttribute('data-filled');
+    }, {passive:true});
   })();
   </script>
 </body>
