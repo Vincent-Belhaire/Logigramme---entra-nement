@@ -106,7 +106,7 @@
         <p class="subtitle">But : reconstituer le cycle complet avec les <strong>durées</strong>. Les étapes sont à remettre dans l’ordre logique ; la liste est <strong>mélangée</strong>.</p>
         <div class="grid cols-2">
           <div class="diagram">
-<img src="Feu tricolore.svg" alt="Logigramme Feu tricolore" style="max-width:200%;height:auto;">
+<img src="Feu tricolore.svg" alt="Logigramme Feu tricolore" style="max-width:150%;height:auto;">
 </div>
           <div>
             <ol class="sortable" id="orderList">
@@ -548,45 +548,27 @@ let dragEl = null;
       });
 
       const zones = $$('.zone[data-accept]');
-      
-zones.forEach(zone=>{
-  zone.addEventListener('dragover', e=>{
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-  });
-  zone.addEventListener('drop', e=>{
-    e.preventDefault();
-    const key = e.dataTransfer.getData('text/plain');
-    if(!key) return;
-    const ex = zone.closest('.exercise');
-    if(!ex) return;
-    const labelsInEx = $$('.label[draggable="true"]', ex);
-    const label = labelsInEx.find(el=>el.dataset.key===key);
-    if(!label) return;
+      zones.forEach(zone=>{
+        zone.addEventListener('dragover', e=>{
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+        });
+        zone.addEventListener('drop', e=>{
+          e.preventDefault();
+          const key = e.dataTransfer.getData('text/plain');
+          if(!key) return;
+          const accepted = zone.dataset.accept;
+          if(accepted !== key) return;
+          const label = dragItems.find(el=>el.dataset.key===key);
+          if(!label) return;
+          zone.textContent = label.textContent;
+          zone.dataset.filled = key;
+          zone.classList.add('filled');
+          label.style.display = 'none';
+        });
+      });
 
-    // Free any other zone using this label
-    const occupiedByThis = ex.querySelector(`.zone[data-filled="${key}"]`);
-    if(occupiedByThis && occupiedByThis !== zone){
-      occupiedByThis.textContent = '';
-      occupiedByThis.classList.remove('filled');
-      occupiedByThis.removeAttribute('data-filled');
-    }
-
-    // Return previous occupant of this zone to the pool
-    const prevKey = zone.dataset.filled;
-    if(prevKey){
-      const prevLabel = labelsInEx.find(el=>el.dataset.key===prevKey);
-      if(prevLabel) prevLabel.style.display = '';
-    }
-
-    // Assign new label to this zone (allow wrong placements)
-    zone.textContent = label.textContent;
-    zone.dataset.filled = key;
-    zone.classList.add('filled');
-    label.style.display = 'none';
-  });
-});
-$$('[data-check-match]').forEach(btn=>{
+      $$('[data-check-match]').forEach(btn=>{
         btn.addEventListener('click', e=>{
           const ex = e.target.closest('.exercise');
           if(!ex) return;
