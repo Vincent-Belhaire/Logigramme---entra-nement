@@ -82,52 +82,47 @@
   
     .qcm .feedback{display:inline-block;margin-left:10px}
   
-/* === Enhancements: touch + svg scaling === */
-:root{ --touchTarget: 52px; }
-.label,.zone,.btn,.chip,.qcm label{ min-height: var(--touchTarget); }
-.label,.zone{ touch-action:none; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
-.drag-ghost{ position:fixed; pointer-events:none; z-index:9999; opacity:.9; transform:translate(-50%,-50%); }
-@media (pointer:coarse){
-  .btn{ padding:14px 16px; border-radius:14px; }
-  .label{ padding:12px 14px; font-size:17px; }
-  .zone{ padding:12px; border-width:3px; }
-  .qcm label{ padding:12px; font-size:17px; }
-}
-.diagram{ overflow: visible; }
-.diagram img{ max-width:none; height:auto; display:block; transform-origin: top left; }
+    /* === Enhancements: touch + svg scaling === */
+    :root{ --touchTarget: 52px; }
+    .label,.zone,.btn,.chip,.qcm label{ min-height: var(--touchTarget); }
+    .label,.zone{ touch-action:none; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
+    .drag-ghost{ position:fixed; pointer-events:none; z-index:9999; opacity:.9; transform:translate(-50%,-50%); }
+    @media (pointer:coarse){
+      .btn{ padding:14px 16px; border-radius:14px; }
+      .label{ padding:12px 14px; font-size:17px; }
+      .zone{ padding:12px; border-width:3px; }
+      .qcm label{ padding:12px; font-size:17px; }
+    }
+    .diagram{ overflow: visible; }
+    .diagram img{ max-width:none; height:auto; display:block; transform-origin: top left; }
 
-/* Remove zoom buttons, adjust spacing */
-.svg-scale{display:flex;align-items:center;gap:8px;margin:8px 0 12px 0;font-size:14px}
-.svg-scale input[type=range]{width:180px}
+    /* Remove zoom buttons, adjust spacing */
+    .svg-scale{display:flex;align-items:center;gap:8px;margin:8px 0 12px 0;font-size:14px}
+    .svg-scale input[type=range]{width:180px}
 
+    /* Sortable touch placeholder */
+    .chip.placeholder{opacity:.4;border-style:dashed}
 
+    /* Prevent page scroll while dragging (tablet) */
+    body.dragging{ touch-action:none; overflow:hidden; }
+    /* Make EX1 sortable touch-friendly */
+    ol.sortable, .chip{ touch-action:none; -webkit-user-select:none; user-select:none; }
+    /* Avoid image intercepting touches while dragging elsewhere */
+    .diagram img{ pointer-events:none; }
 
-/* Sortable touch placeholder */
-.chip.placeholder{opacity:.4;border-style:dashed}
+    .svg-scale{display:none !important}
 
+    .zone{cursor:pointer}
 
-/* Prevent page scroll while dragging (tablet) */
-body.dragging{ touch-action:none; overflow:hidden; }
-/* Make EX1 sortable touch-friendly */
-ol.sortable, .chip{ touch-action:none; -webkit-user-select:none; user-select:none; }
-/* Avoid image intercepting touches while dragging elsewhere */
-.diagram img{ pointer-events:none; }
+    /* Draggable chip inside zones (for re-placement) */
+    .zone-chip{ display:inline-flex; align-items:center; gap:8px; padding:6px 8px; border-radius:8px; background:#fff; border:1px dashed var(--border, #d5d9e2); cursor:grab; user-select:none; -webkit-user-select:none; }
+    .zone-chip:active{ cursor:grabbing; }
+    .zone{ touch-action:none; } /* prevent scroll during drag over zones */
 
+    /* Ensure labels pool keeps space even when empty */
+    .labels{ min-height: 44px; }
 
-.svg-scale{display:none !important}
-
-.zone{cursor:pointer}
-
-/* Draggable chip inside zones (for re-placement) */
-.zone-chip{ display:inline-flex; align-items:center; gap:8px; padding:6px 8px; border-radius:8px; background:#fff; border:1px dashed var(--border, #d5d9e2); cursor:grab; user-select:none; -webkit-user-select:none; }
-.zone-chip:active{ cursor:grabbing; }
-.zone{ touch-action:none; } /* prevent scroll during drag over zones */
-
-
-/* Ensure labels pool keeps space even when empty */
-.labels{ min-height: 44px; }
-
-</style>
+  </style>
 </head>
 <body>
   <header>
@@ -149,11 +144,11 @@ ol.sortable, .chip{ touch-action:none; -webkit-user-select:none; user-select:non
     <section class="exercise active" data-ex="1" data-points="10">
       <div class="card">
         <p class="title">Exercice 1 — Feu tricolore (remettre les étapes dans l'ordre)</p>
-        <p class="subtitle">But : reconstituer le cycle complet avec les <strong>durées</strong>. Les étapes sont à remettre dans l’ordre logique ; la liste est <strong>mélangée</strong>.</p>
+        <p class="subtitle">But : reconstituer le cycle complet avec les <strong>durées</strong>. Les étapes sont à remettre dans l'ordre logique ; la liste est <strong>mélangée</strong>.</p>
         <div class="grid cols-2">
           <div class="diagram">
-<img src="Feu tricolore.svg" alt="Logigramme Feu tricolore" style="max-width:150%;height:auto;">
-</div>
+            <img src="Feu tricolore.svg" alt="Logigramme Feu tricolore" style="max-width:150%;height:auto;">
+          </div>
           <div>
             <ol class="sortable" id="orderList">
               <!-- data-key = position attendue; la liste sera mélangée au chargement -->
@@ -170,65 +165,68 @@ ol.sortable, .chip{ touch-action:none; -webkit-user-select:none; user-select:non
             </ol>
             <div class="toolbar">
               <button class="btn good" data-check-order>Vérifier</button>
-              
               <div id="fb1" class="feedback" aria-live="polite"></div>
             </div>
           </div>
         </div>
       </div>
-   </section>
-<section class="exercise" data-ex="2" data-points="5">
-  <div class="card">
-    <h2>Exercice 2 — Détecteur de mouvement (appartement)</h2>
-    <p>
-      But : associer chaque <strong>élément</strong> du logigramme à la bonne zone
-      (condition, action, <em>événement</em>, temporisation, etc.).
-    </p>
-    <div class="grid cols-2">
-      <!-- Diagramme à gauche -->
-      <div class="svg-scale" data-scope="section"><span>Échelle :</span><input type="range" min="40" max="180" step="5" value="100" data-zoom-range><span class="val">100%</span></div><div class="diagram overlay" id="diagram2">
-        <img src="Detecteur lampe.svg" alt="Logigramme détecteur de mouvement"
-             style="max-width:50%;height:auto;pointer-events:none;">
-      </div>
+    </section>
 
-      <!-- Étiquettes + zones à droite -->
-      <div>
-        <div class="labels" id="labels2">
-          <div class="label" draggable="true" data-key="presence">Vérifier la présence de mouvement</div>
-          <div class="label" draggable="true" data-key="allumer">Si mouvement → allumer la lampe</div>
-          <div class="label" draggable="true" data-key="attendre">Attendre 30 secondes</div>
-          <div class="label" draggable="true" data-key="eteindre">Éteindre la lampe</div>
-          <div class="label" draggable="true" data-key="boucle">Retour à l'attente</div>
+    <!-- EX 2: Détecteur de mouvement -->
+    <section class="exercise" data-ex="2" data-points="5">
+      <div class="card">
+        <h2 class="title">Exercice 2 — Détecteur de mouvement (appartement)</h2>
+        <p class="subtitle">But : associer chaque <strong>élément</strong> du logigramme à la bonne zone (condition, action, <em>événement</em>, temporisation, etc.).</p>
+        <div class="grid cols-2">
+          <div class="diagram overlay" id="diagram2">
+            <img src="Detecteur lampe.svg" alt="Logigramme détecteur de mouvement" style="max-width:50%;height:auto;pointer-events:none;">
+          </div>
+          <div>
+            <div class="labels" id="labels2">
+              <div class="label" draggable="true" data-key="presence">Vérifier la présence de mouvement</div>
+              <div class="label" draggable="true" data-key="allumer">Si mouvement → allumer la lampe</div>
+              <div class="label" draggable="true" data-key="attendre">Attendre 30 secondes</div>
+              <div class="label" draggable="true" data-key="eteindre">Éteindre la lampe</div>
+              <div class="label" draggable="true" data-key="boucle">Retour à l'attente</div>
+            </div>
+            <p style="margin-top:10px"><strong>Dépose ici tes étiquettes :</strong></p>
+            <div class="zones" style="display:grid;gap:10px">
+              <div class="zone" data-accept="presence" title="Vérifier mouvement ?"></div>
+              <div class="zone" data-accept="allumer" title="Allumer lampe"></div>
+              <div class="zone" data-accept="attendre" title="Attendre 30 s"></div>
+              <div class="zone" data-accept="eteindre" title="Éteindre lampe"></div>
+              <div class="zone" data-accept="boucle" title="Retour à l'attente"></div>
+            </div>
+          </div>
         </div>
-
-        <p style="margin-top:10px"><strong>Dépose ici tes étiquettes :</strong></p>
-        <div class="zones" style="display:grid;gap:10px">
-          <div class="zone" data-accept="presence" title="Vérifier mouvement ?"></div>
-          <div class="zone" data-accept="allumer" title="Allumer lampe"></div>
-          <div class="zone" data-accept="attendre" title="Attendre 30 s"></div>
-          <div class="zone" data-accept="eteindre" title="Éteindre lampe"></div>
-          <div class="zone" data-accept="boucle" title="Retour à l'attente"></div>
+        <div class="toolbar">
+          <button class="btn good" data-check-match>Vérifier</button>
+          <span id="fb2" class="feedback" aria-live="polite"></span>
         </div>
       </div>
-    </div>
-    <div class="toolbar"><button class="btn good" data-check-match>Vérifier</button><span id="fb2" class="feedback" aria-live="polite"></span></div></div>
-  </div>
-</section>
+    </section>
 
     <!-- EX 3: Portail électrique (QCM logique) -->
     <section class="exercise" data-ex="3" data-points="3">
       <div class="card">
         <p class="title">Exercice 3 — Portail électrique (QCM condition)</p>
         <p class="subtitle">But : comprendre la décision « portail fermé ? » en réponse à une <strong>demande de fermeture</strong>.</p>
-        <div class="svg-scale" data-scope="section"><span>Échelle :</span><input type="range" min="40" max="180" step="5" value="100" data-zoom-range><span class="val">100%</span></div><div class="diagram overlay"><img src="Portail.svg" alt="Logigramme portail électrique" style="max-width:30%;height:auto;">
-<small></small></div>
+        <div class="diagram overlay">
+          <img src="Portail.svg" alt="Logigramme portail électrique" style="max-width:30%;height:auto;">
+        </div>
         <div class="qcm" id="qcm3">
           <p><strong>Question :</strong> Le récepteur reçoit une <strong>demande de fermeture</strong>. Le logigramme vérifie : « le portail est‑il fermé ? ». Que se passe‑t‑il si la réponse est <em>NON</em> ?</p>
           <label><input type="radio" name="q3" value="a"> a) Le moteur ouvre le portail</label>
           <label><input type="radio" name="q3" value="b"> b) Le moteur ferme le portail</label>
           <label><input type="radio" name="q3" value="c"> c) Rien ne se passe</label>
-          <div class="toolbar"><button class="btn good" data-check-qcm data-correct="b">Vérifier</button><span id="fb3" class="feedback" aria-live="polite"></span></div>
-          <details class="sol" aria-disabled="true"><summary>Afficher la solution</summary><p class="right">Réponse : b) Le moteur <strong>ferme</strong> le portail (demande de fermeture et test « NON » = pas encore fermé → on ferme).</p></details>
+          <div class="toolbar">
+            <button class="btn good" data-check-qcm data-correct="b">Vérifier</button>
+            <span id="fb3" class="feedback" aria-live="polite"></span>
+          </div>
+          <details class="sol" aria-disabled="true">
+            <summary>Afficher la solution</summary>
+            <p class="right">Réponse : b) Le moteur <strong>ferme</strong> le portail (demande de fermeture et test « NON » = pas encore fermé → on ferme).</p>
+          </details>
         </div>
       </div>
     </section>
@@ -238,8 +236,9 @@ ol.sortable, .chip{ touch-action:none; -webkit-user-select:none; user-select:non
       <div class="card">
         <p class="title">Exercice 4 — Ventilation d'une salle (appariement + QCM)</p>
         <p class="subtitle">But : associer condition ↔ action, puis identifier la boucle.</p>
-        <div class="svg-scale" data-scope="section"><span>Échelle :</span><input type="range" min="40" max="180" step="5" value="100" data-zoom-range><span class="val">100%</span></div><div class="diagram overlay"><img src="Ventilation.svg" alt="Logigramme ventilation" style="max-width:40%;height:auto;">
-<small></small></div>
+        <div class="diagram overlay">
+          <img src="Ventilation.svg" alt="Logigramme ventilation" style="max-width:40%;height:auto;">
+        </div>
         <div class="grid cols-2">
           <div>
             <p><strong>Associez :</strong></p>
@@ -258,24 +257,32 @@ ol.sortable, .chip{ touch-action:none; -webkit-user-select:none; user-select:non
               <label><input type="radio" name="q4" value="a"> Il recommence immédiatement</label>
               <label><input type="radio" name="q4" value="b"> Il attend 2 minutes puis recommence</label>
               <label><input type="radio" name="q4" value="c"> Il s'arrête</label>
-              <div class="toolbar"><button class="btn good" data-check-qcm data-correct="b">Vérifier</button><span id="fb4" class="feedback" aria-live="polite"></span></div>
-              <details class="sol" aria-disabled="true"><summary>Afficher la solution</summary><p class="right">Réponse : « attendre 2 minutes puis recommencer ».</p></details>
+              <div class="toolbar">
+                <button class="btn good" data-check-qcm data-correct="b">Vérifier</button>
+                <span id="fb4" class="feedback" aria-live="polite"></span>
+              </div>
+              <details class="sol" aria-disabled="true">
+                <summary>Afficher la solution</summary>
+                <p class="right">Réponse : « attendre 2 minutes puis recommencer ».</p>
+              </details>
             </div>
           </div>
         </div>
-        <div class="toolbar"><button class="btn good" data-check-match>Vérifier les appariements</button><span id="fb4m" class="feedback" aria-live="polite"></span></div>
+        <div class="toolbar">
+          <button class="btn good" data-check-match>Vérifier les appariements</button>
+          <span id="fb4m" class="feedback" aria-live="polite"></span>
+        </div>
       </div>
     </section>
 
-    <!-- EX 5: Station météo (détection d'erreurs + QCM logique) - CORRIGÉ -->
+    <!-- EX 5: Station météo (détection d'erreurs + QCM logique) -->
     <section class="exercise" data-ex="5" data-points="5">
       <div class="card">
         <p class="title">Exercice 5 — Station météo (analyse & correction)</p>
         <p class="subtitle">But : repérer les incohérences d'un logigramme puis valider la logique conditionnelle.</p>
         <div class="grid cols-2">
-          <div class="svg-scale" data-scope="section"><span>Échelle :</span><input type="range" min="40" max="180" step="5" value="100" data-zoom-range><span class="val">100%</span></div><div class="diagram overlay">
+          <div class="diagram overlay">
             <img src="Station meteo.svg" alt="Logigramme station météo" style="max-width:90%;height:auto;">
-            <small></small>
           </div>
           <div>
             <div style="display:grid;gap:8px;width:100%">
@@ -286,7 +293,10 @@ ol.sortable, .chip{ touch-action:none; -webkit-user-select:none; user-select:non
               <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" class="err" value="ok3"> 5) « Boucle : attendre 1 minute puis revérifier »</label>
             </div>
             <p style="margin-top:10px"><strong>Question :</strong> Coche uniquement les <em>éléments incohérents</em> du pseudo-logigramme.</p>
-            <div class="toolbar"><button class="btn bad" id="checkErr">Vérifier les incohérences</button><span id="fb5" class="feedback" aria-live="polite"></span></div>
+            <div class="toolbar">
+              <button class="btn bad" id="checkErr">Vérifier les incohérences</button>
+              <span id="fb5" class="feedback" aria-live="polite"></span>
+            </div>
           </div>
         </div>
         <hr style="border-color:#dfe6f1; margin: 20px 0;" />
@@ -297,20 +307,26 @@ ol.sortable, .chip{ touch-action:none; -webkit-user-select:none; user-select:non
               <label><input type="radio" name="q5" value="a"> Ouvrir le store</label>
               <label><input type="radio" name="q5" value="b"> Fermer le store</label>
               <label><input type="radio" name="q5" value="c"> Allumer la lumière</label>
-              <div class="toolbar"><button class="btn good" data-check-qcm data-correct="b">Vérifier</button><span class="feedback" id="fb5q"></span></div>
-              <details class="sol" aria-disabled="true"><summary>Afficher la solution</summary><p class="right">Réponse : « Fermer le store » si pluie détectée.</p></details>
+              <div class="toolbar">
+                <button class="btn good" data-check-qcm data-correct="b">Vérifier</button>
+                <span class="feedback" id="fb5q"></span>
+              </div>
+              <details class="sol" aria-disabled="true">
+                <summary>Afficher la solution</summary>
+                <p class="right">Réponse : « Fermer le store » si pluie détectée.</p>
+              </details>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- EX 6: Badge d'accès (appariement + QCM) - CORRIGÉ -->
+    <!-- EX 6: Badge d'accès (appariement + QCM) -->
     <section class="exercise" data-ex="6" data-points="5">
       <div class="card">
         <p class="title">Exercice 6 — Badge d'accès (appariement + QCM)</p>
         <div class="grid cols-2">
-          <div class="svg-scale" data-scope="section"><span>Échelle :</span><input type="range" min="40" max="180" step="5" value="100" data-zoom-range><span class="val">100%</span></div><div class="diagram overlay">
+          <div class="diagram overlay">
             <img src="Badge acces.svg" alt="Logigramme badge d'accès" style="max-width:90%;height:auto;">
           </div>
           <div>
@@ -361,8 +377,9 @@ ol.sortable, .chip{ touch-action:none; -webkit-user-select:none; user-select:non
       <div class="card">
         <p class="title">Exercice 7 — Thermostat (QCM + appariement)</p>
         <div class="grid cols-2">
-          <div class="svg-scale" data-scope="section"><span>Échelle :</span><input type="range" min="40" max="180" step="5" value="100" data-zoom-range><span class="val">100%</span></div><div class="diagram overlay"><img src="Thermostat.svg" alt="Logigramme thermostat" style="max-width:100%;height:auto;">
-<small></small></div>
+          <div class="diagram overlay">
+            <img src="Thermostat.svg" alt="Logigramme thermostat" style="max-width:100%;height:auto;">
+          </div>
           <div>
             <p><strong>Associez :</strong></p>
             <div class="grid zones" style="grid-template-columns:1fr 1fr">
@@ -375,7 +392,10 @@ ol.sortable, .chip{ touch-action:none; -webkit-user-select:none; user-select:non
               <div class="label" draggable="true" data-key="cool">Allumer la climatisation</div>
               <div class="label" draggable="true" data-key="idle">Attendre / ne rien faire</div>
             </div>
-            <div class="toolbar"><button class="btn good" data-check-match>Vérifier</button><span class="feedback" id="fb7"></span></div>
+            <div class="toolbar">
+              <button class="btn good" data-check-match>Vérifier</button>
+              <span class="feedback" id="fb7"></span>
+            </div>
           </div>
         </div>
       </div>
@@ -385,24 +405,29 @@ ol.sortable, .chip{ touch-action:none; -webkit-user-select:none; user-select:non
     <section class="exercise" data-ex="8" data-points="3">
       <div class="card">
         <p class="title">Exercice 8 — Passage piéton intelligent (QCM)</p>
-        <div class="svg-scale" data-scope="section"><span>Échelle :</span><input type="range" min="40" max="180" step="5" value="100" data-zoom-range><span class="val">100%</span></div><div class="diagram overlay"><img src="Passage pieton.svg" alt="Logigramme passage piéton" style="max-width:30%;height:auto;">
-<small></small></div>
+        <div class="diagram overlay">
+          <img src="Passage pieton.svg" alt="Logigramme passage piéton" style="max-width:30%;height:auto;">
+        </div>
         <div class="qcm">
-<p>Un piéton appuie sur le bouton. Que se passe-t-il d’abord ?</p>
+          <p>Un piéton appuie sur le bouton. Que se passe-t-il d'abord ?</p>
           <label><input type="radio" name="q8a" value="a"> Les feux voitures passent immédiatement au rouge</label>
           <label><input type="radio" name="q8a" value="b"> Le système attend que le cycle voiture se termine puis bascule</label>
           <label><input type="radio" name="q8a" value="c"> Rien du tout</label>
-          <div class="toolbar"><button class="btn good" data-check-qcm data-correct="b">Vérifier</button><span class="feedback" id="fb8a"></span></div>
-</div>
-<div class="qcm">
-
+          <div class="toolbar">
+            <button class="btn good" data-check-qcm data-correct="b">Vérifier</button>
+            <span class="feedback" id="fb8a"></span>
+          </div>
+        </div>
+        <div class="qcm">
           <p>Pendant la traversée piéton, que doivent afficher les feux voitures ?</p>
           <label><input type="radio" name="q8b" value="a"> Orange clignotant</label>
           <label><input type="radio" name="q8b" value="b"> Rouge fixe</label>
           <label><input type="radio" name="q8b" value="c"> Vert</label>
-          <div class="toolbar"><button class="btn good" data-check-qcm data-correct="b">Vérifier</button><span class="feedback" id="fb8b"></span>
-</div>
-</div>
+          <div class="toolbar">
+            <button class="btn good" data-check-qcm data-correct="b">Vérifier</button>
+            <span class="feedback" id="fb8b"></span>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -411,8 +436,9 @@ ol.sortable, .chip{ touch-action:none; -webkit-user-select:none; user-select:non
       <div class="card">
         <p class="title">Exercice 10 — Alerte inondation (logique seuils)</p>
         <div class="grid cols-2">
-          <div class="svg-scale" data-scope="section"><span>Échelle :</span><input type="range" min="40" max="180" step="5" value="100" data-zoom-range><span class="val">100%</span></div><div class="diagram overlay"><img src="Alerte inondation.svg" alt="Logigramme alerte inondation" style="max-width:250%;height:auto;">
-<small></div>
+          <div class="diagram overlay">
+            <img src="Alerte inondation.svg" alt="Logigramme alerte inondation" style="max-width:250%;height:auto;">
+          </div>
           <div>
             <p><strong>Associez les niveaux au comportement :</strong></p>
             <div class="grid zones" style="grid-template-columns:1fr 1fr">
@@ -425,7 +451,10 @@ ol.sortable, .chip{ touch-action:none; -webkit-user-select:none; user-select:non
               <div class="label" draggable="true" data-key="warn">Alerte visuelle locale</div>
               <div class="label" draggable="true" data-key="alarm">Sirène + notification</div>
             </div>
-            <div class="toolbar"><button class="btn good" data-check-match>Vérifier</button><span class="feedback" id="fb10"></span></div>
+            <div class="toolbar">
+              <button class="btn good" data-check-match>Vérifier</button>
+              <span class="feedback" id="fb10"></span>
+            </div>
           </div>
         </div>
       </div>
@@ -434,816 +463,360 @@ ol.sortable, .chip{ touch-action:none; -webkit-user-select:none; user-select:non
   </main>
 
   <script>
+// --- Helpers & state ---
+const $ = (sel, root=document) => root.querySelector(sel);
+const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
 
-// --- State normalizer: ensures labels and zones are in sync ---
-function normalizeExercise(ex){
-  const labels = Array.from(ex.querySelectorAll('.label[draggable]'));
-  const zones  = Array.from(ex.querySelectorAll('.zone[data-accept]'));
-  const zoneKeys = new Map();
-  // Pass 1: clean duplicate keys across zones, keep last occurrence
-  zones.forEach(z=>{
-    const key = z.dataset.filled || (z.querySelector('.zone-chip') && z.querySelector('.zone-chip').dataset.key);
-    if(!key) return;
-    // if key already seen in another zone, clear this duplicate
-    if(zoneKeys.has(key)){
-      z.innerHTML=''; z.classList.remove('filled'); z.removeAttribute('data-filled');
-    }else{
-      zoneKeys.set(key, z);
-      z.dataset.filled = key;
-      if(!z.querySelector('.zone-chip') && z.textContent.trim()!==''){
-        // wrap content if needed
-        z.innerHTML = '<span class="zone-chip" draggable="true" data-key="'+key+'">'+z.textContent+'</span>';
-      }
-    }
-  });
-  // Pass 2: sync pool labels visibility versus zones
-  labels.forEach(l=>{
-    const k = l.dataset.key;
-    if(zoneKeys.has(k)){
-      l.style.display='none';
-    }else{
-      l.style.display='';
-    }
+const exercises = $$('.exercise');
+const scoreEl = $('#score');
+const totalEl = $('#total');
+const prevBtn = $('#prevBtn');
+const nextBtn = $('#nextBtn');
+const resetBtn = $('#resetBtn');
+const exportBtn = $('#exportBtn');
+
+let current = 0;
+const APP_VERSION = '1.2.0';
+let results = {};
+
+// Charger les résultats sauvegardés
+try {
+  results = JSON.parse(localStorage.getItem('logi_results') || '{}');
+} catch(e) {
+  results = {};
+}
+
+// Vérifier la version
+const storedVer = localStorage.getItem('logi_version');
+if(storedVer !== APP_VERSION) {
+  localStorage.removeItem('logi_results');
+  results = {};
+  localStorage.setItem('logi_version', APP_VERSION);
+}
+
+function totalPoints() {
+  return exercises.reduce((s, ex) => s + Number(ex.dataset.points || 0), 0);
+}
+
+function save() {
+  localStorage.setItem('logi_results', JSON.stringify(results));
+  localStorage.setItem('logi_version', APP_VERSION);
+}
+
+function updateScore() {
+  const sum = Object.values(results).reduce((a, b) => a + Number(b || 0), 0);
+  scoreEl.textContent = sum;
+  totalEl.textContent = totalPoints();
+}
+
+function unlockSolutions(ex) {
+  $$('details.sol[aria-disabled="true"]', ex).forEach(d => {
+    d.setAttribute('aria-disabled', 'false');
+    d.style.display = 'block';
   });
 }
 
+function show(i) {
+  exercises.forEach((ex, idx) => {
+    ex.classList.toggle('active', idx === i);
+  });
+  current = i;
+  prevBtn.disabled = i === 0;
+  nextBtn.disabled = i === exercises.length - 1;
+  
+  setTimeout(() => {
+    const t = exercises[i].querySelector('.title');
+    if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 50);
+}
 
-// --- Global drop tracker to restore on failed drop ---
-window.__lastDropInfo = { key:null, zone:null, ts:0 };
+// Navigation
+prevBtn.addEventListener('click', () => show(Math.max(0, current - 1)));
+nextBtn.addEventListener('click', () => show(Math.min(exercises.length - 1, current + 1)));
 
-    // --- Helpers & state ---
-    const $ = (sel, root=document) => root.querySelector(sel);
-    const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+resetBtn.addEventListener('click', () => {
+  if (!confirm('Réinitialiser toutes les réponses ?')) return;
+  localStorage.removeItem('logi_results');
+  results = {};
+  location.reload();
+});
 
-// --- Scoring config & aggregation (prevents > total) ---
-const ORDER_POINTS = { '1':10 };
-const MATCH_POINTS = { '2':5, '4':3, '6':3, '7':4, '10':4 };
-const ERR_POINTS   = { '5':3 };
-// QCM keys as stored in results (from feedback IDs): ex3, ex4, ex5q, ex6q, ex8a, ex8b
-const QCM_POINTS  = { 'ex3':3, 'ex4':1, 'ex5q':2, 'ex6q':2, 'ex8a':1, 'ex8b':2 };
+exportBtn.addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify({ date: new Date().toISOString(), results }, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'resultats-logigrammes.json';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+});
 
-function computeAggregatedScore(res){
-  const taken = new Set();
-  let sum = 0;
-
-  for(const [k,v] of Object.entries(res||{})){
-    if(!v) continue;
-    // ORDER
-    let m = k.match(/^ex(1)_order$/);
-    if(m){
-      const key = `ex${m[1]}_order`;
-      if(taken.has(key)) continue;
-      const pts = ORDER_POINTS[m[1]]||0;
-      if(pts){ sum += Math.min(Number(v)||0, pts); taken.add(key); }
-      continue;
+// --- EX1: Tri des étapes ---
+(function() {
+  const list = $('#orderList');
+  if (!list) return;
+  
+  // Mélanger les éléments
+  const items = Array.from(list.querySelectorAll('.chip'));
+  const correctOrder = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+  
+  function shuffleArray(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
     }
-    // MATCH
-    m = k.match(/^ex(2|4|6|7|10)_match$/);
-    if(m){
-      const exId = m[1];
-      const key = `ex${exId}_match`;
-      if(taken.has(key)) continue;
-      const pts = MATCH_POINTS[exId]||0;
-      if(pts){ sum += Math.min(Number(v)||0, pts); taken.add(key); }
-      continue;
-    }
-    // ERR (ex5)
-    if(k==='ex5_err'){
-      if(taken.has('ex5_err')) continue;
-      const pts = ERR_POINTS['5']||0;
-      if(pts){ sum += Math.min(Number(v)||0, pts); taken.add('ex5_err'); }
-      continue;
-    }
-    // QCM exact keys
-    if(QCM_POINTS.hasOwnProperty(k)){
-      if(taken.has(k)) continue;
-      const pts = QCM_POINTS[k]||0;
-      if(pts){ sum += Math.min(Number(v)||0, pts); taken.add(k); }
-      continue;
-    }
-    // Unknown keys are ignored (avoid double-count artifacts)
+    return a;
   }
-  return sum;
-}
-
-
-    const exercises = $$('.exercise');
-    const scoreEl = $('#score');
-    const totalEl = $('#total');
-    const prevBtn = $('#prevBtn');
-    const nextBtn = $('#nextBtn');
-    const resetBtn = $('#resetBtn');
-    const exportBtn = $('#exportBtn');
-
-    let current = 0;
-    const APP_VERSION='1.5.3';
-    let results = (function(){ try{ return JSON.parse(localStorage.getItem('logi_results')||'{}'); }catch(e){ return {}; } })();
-window.results = results;
-    try{ results = JSON.parse(localStorage.getItem('logi_results')||'{}'); }catch(e){ results = {}; }
-    /* keep scores across versions */
-localStorage.setItem('logi_version', APP_VERSION);
-
-    function totalPoints(){
-      return exercises.reduce((s,ex)=>s+Number(ex.dataset.points||0),0);
+  
+  let shuffled = shuffleArray(items);
+  let attempt = 0;
+  while (shuffled.map(li => li.dataset.key).join(',') === correctOrder.join(',') && attempt < 5) {
+    shuffled = shuffleArray(items);
+    attempt++;
+  }
+  
+  // Vider et réinsérer les éléments mélangés
+  list.innerHTML = '';
+  shuffled.forEach(el => list.appendChild(el));
+  
+  // Drag and drop
+  let dragEl = null;
+  
+  list.addEventListener('dragstart', (e) => {
+    const li = e.target.closest('.chip');
+    if (!li) return;
+    dragEl = li;
+    li.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+  });
+  
+  list.addEventListener('dragend', (e) => {
+    const li = e.target.closest('.chip');
+    if (li) li.classList.remove('dragging');
+    dragEl = null;
+  });
+  
+  list.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    const afterEl = getDragAfterEl(list, e.clientY);
+    if (!dragEl) return;
+    if (afterEl) {
+      list.insertBefore(dragEl, afterEl);
+    } else {
+      list.appendChild(dragEl);
     }
-    totalEl.textContent = totalPoints();
-
-    function save(){ localStorage.setItem('logi_results', JSON.stringify(results)); localStorage.setItem('logi_version', APP_VERSION); }
-
-    function updateScore(){
-      const sum = computeAggregatedScore(window.results||{});
-      scoreEl.textContent = sum;
-    }
-function unlockSolutions(ex){
-      // Rend visibles les <details class="sol"> de l'exercice passé
-      $$('details.sol[aria-disabled="true"]', ex).forEach(d=>d.setAttribute('aria-disabled','false'));
-      $$('details.sol', ex).forEach(d=>{ if(d.getAttribute('aria-disabled')==='false'){ d.style.display='block'; } });
-    }
-
-    function show(i){
-      exercises.forEach((ex,idx)=>ex.classList.toggle('active', idx===i));
-      current=i;
-      prevBtn.disabled = i===0;
-      nextBtn.disabled = i===exercises.length-1;
-      setTimeout(()=>{
-        const t = exercises[i].querySelector('.title');
-        if(t) t.scrollIntoView({behavior:'smooth',block:'start'});
-      },50);
-    }
-
-    prevBtn.addEventListener('click',()=>show(Math.max(0,current-1)));
-    nextBtn.addEventListener('click',()=>show(Math.min(exercises.length-1,current+1)));
-
-    resetBtn.addEventListener('click',()=>{
-      if(!confirm('Réinitialiser toutes les réponses ?')) return;
-      localStorage.removeItem('logi_results');
-      results={};
-      location.reload();
-    });
-
-    exportBtn.addEventListener('click',()=>{
-      const blob = new Blob([JSON.stringify({date:new Date().toISOString(),results},null,2)],{type:'application/json'});
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'resultats-logigrammes.json';
-      a.click();
-      setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
-    });
-
-    // --- EX1: shuffle + sortable order ---
-    (function(){
-      const list = $('#orderList');
-      if(!list) return;
-      // --- Mélange robuste (Fisher–Yates) + anti-cas "déjà trié" ---
-      const items = Array.from(list.querySelectorAll('.chip'));
-      const correctOrder = ['1','2','3','4','5','6','7','8','9','10'];
-
-      function shuffleArray(arr){
-        const a = arr.slice();
-        for(let i = a.length - 1; i > 0; i--){
-          const j = Math.floor(Math.random() * (i + 1));
-          [a[i], a[j]] = [a[j], a[i]];
-        }
-        return a;
+  });
+  
+  function getDragAfterEl(container, y) {
+    const els = [...container.querySelectorAll('.chip:not(.dragging)')];
+    return els.reduce((closest, child) => {
+      const box = child.getBoundingClientRect();
+      const offset = y - box.top - box.height / 2;
+      if (offset < 0 && offset > closest.offset) {
+        return { offset: offset, element: child };
+      } else {
+        return closest;
       }
-
-      let shuffled = shuffleArray(items);
-      let attempt = 0;
-      while (shuffled.map(li => li.dataset.key).join(',') === correctOrder.join(',') && attempt < 5) {
-        shuffled = shuffleArray(items);
-        attempt++;
-      }
-      shuffled.forEach(el=>list.appendChild(el));
-let dragEl = null;
-      list.addEventListener('dragstart', (e)=>{
-        const li = e.target.closest('.chip');
-        if(!li) return;
-        dragEl = li; li.classList.add('dragging');
-        e.dataTransfer.effectAllowed='move';
-      });
-      list.addEventListener('dragend', (e)=>{
-        const li = e.target.closest('.chip');
-        if(li) li.classList.remove('dragging');
-        dragEl = null;
-      });
-      list.addEventListener('dragover', (e)=>{
-        e.preventDefault();
-        const afterEl = getDragAfterEl(list, e.clientY);
-        if(!dragEl) return;
-        if(afterEl) list.insertBefore(dragEl, afterEl);
-        else list.appendChild(dragEl);
-      });
-
-      function getDragAfterEl(container, y){
-        const els = [...container.querySelectorAll('.chip:not(.dragging)')];
-        return els.reduce((closest, child)=>{
-          const box = child.getBoundingClientRect();
-          const offset = y - box.top - box.height/2;
-          if(offset < 0 && offset > closest.offset) return {offset:offset, element:child};
-          else return closest;
-        }, {offset:Number.NEGATIVE_INFINITY}).element;
-      }
-
-      $('[data-check-order]').addEventListener('click',()=>{
-        const order = [...list.querySelectorAll('.chip')].map(li=>li.dataset.key);
-        const correct = order.join(',') === correctOrder.join(',');
-        const ex = list.closest('.exercise');
-        const id = ex.dataset.ex;
-        const resKey = 'ex' + id + '_order';
-        if(Object.prototype.hasOwnProperty.call(results, resKey)){
-          const fb = $('#fb1'); if(fb){ fb.textContent='Déjà validé.'; fb.className='feedback good'; }
-          return;
-        }
-        const pts = correct ? Number(ex.dataset.points) : 0;
-        results[resKey] = pts;
-        save();
-        updateScore();
-        const fb = $('#fb1');
-        if(fb){
-          fb.textContent = correct ? '✓ Bon ordre !' : '✗ Ordre incorrect. Réessaie.';
-          fb.className = 'feedback ' + (correct ? 'good' : 'bad');
-        }
-        if(correct) unlockSolutions(ex);
-      });
-    })();
-
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+  }
+  
+  // Vérification
+  $('[data-check-order]').addEventListener('click', () => {
+    const order = [...list.querySelectorAll('.chip')].map(li => li.dataset.key);
+    const correct = order.join(',') === correctOrder.join(',');
+    const ex = list.closest('.exercise');
+    const id = ex.dataset.ex;
+    const resKey = 'ex' + id;
     
-    // --- EX2, EX4, EX6, EX7, EX10: drag & drop matching (first-try scoring per exercise) ---
-    (function(){
-      const dragItems = $$('.label[draggable="true"]');
-      let dragSrc = null;
-      dragItems.forEach(el=>{
-        el.addEventListener('dragstart', (e)=>{
-          dragSrc = el;
-          e.dataTransfer.effectAllowed = 'move';
-          e.dataTransfer.setData('text/plain', el.dataset.key);
-        });
-        el.addEventListener('dragend', ()=> dragSrc = null);
-      });
-
-      const zones = $$('.zone[data-accept]');
-      zones.forEach(zone=>{
-        zone.addEventListener('dragover', e=>{
-          e.preventDefault();
-          e.dataTransfer.dropEffect = 'move';
-        });
-        zone.addEventListener('drop', e=>{
-          e.preventDefault();
-          const key = e.dataTransfer.getData('text/plain');
-          if(!key) return;
-          const accepted = zone.dataset.accept;
-          if(accepted !== key) return;
-          const label = dragItems.find(el=>el.dataset.key===key);
-          if(!label) return;
-          zone.innerHTML = '<span class="zone-chip" draggable="true" data-key="'+key+'">'+label.textContent+'</span>';
-          zone.dataset.filled = key;
-          zone.classList.add('filled');
-          label.style.display = 'none';
-        });
-      });
-
-      $$('[data-check-match]').forEach(btn=>{
-        btn.addEventListener('click', e=>{
-          const ex = e.target.closest('.exercise');
-          if(!ex) return;
-          const id = ex.dataset.ex;
-          const resKey = 'ex' + id + '_match';
-
-          // Scoring only on first validation
-          if(Object.prototype.hasOwnProperty.call(results, resKey)){
-            const fb = ex.querySelector('.feedback');
-            if(fb){ fb.textContent = 'Déjà validé.'; fb.className = 'feedback good'; }
-            return;
-          }
-
-          const zones = $$('.zone[data-accept]', ex);
-          const correct = zones.every(zone => zone.dataset.filled === zone.dataset.accept);
-          const pts = correct ? Number(ex.dataset.points) : 0;
-          results[resKey] = pts;
-          save(); updateScore();
-
-          const fb = ex.querySelector('.feedback');
-          if(fb){
-            fb.textContent = correct ? '✓ Bon appariement !' : '✗ Appariement incorrect. Réessaie.';
-            fb.className = 'feedback ' + (correct ? 'good' : 'bad');
-          }
-          if(correct) unlockSolutions(ex);
-        });
-      });
-    })();
-
-
+    if (results[resKey] !== undefined) {
+      const fb = $('#fb1');
+      if (fb) {
+        fb.textContent = 'Déjà validé.';
+        fb.className = 'feedback good';
+      }
+      return;
+    }
     
-    // --- EX3, EX4, EX5, EX6, EX8: QCM (scoped to nearest .qcm) + scoring only on first validation ---
-    (function(){
-      $$('[data-check-qcm]').forEach(btn=>{
-        btn.addEventListener('click', e=>{
-          const qcm = e.target.closest('.qcm');
-          const ex  = e.target.closest('.exercise');
-          if(!qcm || !ex) return;
-          const id  = ex.dataset.ex;                // e.g., "8"
-          const correct = e.target.dataset.correct; // expected value e.g., "b"
-          const radios = qcm.querySelectorAll('input[type=radio]');
-          const selected = Array.from(radios).find(r=>r.checked);
-          const isCorrect = !!selected && selected.value === correct;
-
-          // Determine a stable sub-key for this QCM (use nearest feedback id if present)
-          const fbEl = qcm.querySelector('.feedback');
-          const fbId = fbEl && fbEl.id ? fbEl.id : ( 'fb' + id + 'q' );
-          const resKey = 'ex' + fbId.replace(/^fb/, '');
-
-          // Scoring only on the first validation for this QCM
-          if(Object.prototype.hasOwnProperty.call(results, resKey)){
-            // Already validated once: do not change score
-            if(fbEl){
-              fbEl.textContent = isCorrect ? 'Déjà validé.' : 'Déjà validé (score figé).';
-              fbEl.className = 'feedback ' + (isCorrect ? 'good' : 'bad');
-            }
-            return;
-          }
-
-          const pts = isCorrect ? Number(ex.dataset.points) : 0;
-          results[resKey] = pts;
-          save(); updateScore();
-
-          if(fbEl){
-            fbEl.textContent = isCorrect ? '✓ Bonne réponse !' : '✗ Réponse incorrecte. Réessaie.';
-            fbEl.className = 'feedback ' + (isCorrect ? 'good' : 'bad');
-          }
-          if(isCorrect) unlockSolutions(ex);
-        });
-      });
-    })();
-
-
-    // --- EX5: détection d'erreurs ---
-    (function(){
-      const btn = $('#checkErr');
-      if(!btn) return;
-      btn.addEventListener('click',()=>{
-        const ex = btn.closest('.exercise');
-        const id = ex.dataset.ex;
-        const checks = $$('.err:checked', ex);
-        const correct = checks.length===2 && checks[0].value==='ko1' && checks[1].value==='ko2';
-        const pts = correct ? Number(ex.dataset.points) : 0;
-        results['ex'+id+'_err'] = pts;
-        save();
-        updateScore();
-        const fb = $('#fb5');
-        if(fb){
-          fb.textContent = correct ? '✓ Erreurs bien identifiées !' : '✗ Pas tout à fait. Réessaie.';
-          fb.className = 'feedback ' + (correct ? 'good' : 'bad');
-        }
-        if(correct) unlockSolutions(ex);
-      });
-    })();
-
-    // --- Initialisation ---
+    const pts = correct ? Number(ex.dataset.points) : 0;
+    results[resKey] = pts;
+    save();
     updateScore();
-    show(0);
-  </script>
-<script>
-/* === Enhancements JS: unified scoring, svg scaling, tablet DnD === */
-(function(){
-  window.results = window.results || (function(){ try{ return JSON.parse(localStorage.getItem('logi_results')||'{}'); }catch(e){ return {}; } })();
-  const APP_VERSION = window.APP_VERSION || '1.4.0';
-  const $ = (sel, root=document)=>root.querySelector(sel);
-  const $$ = (sel, root=document)=>Array.from(root.querySelectorAll(sel));
-  function save(){ localStorage.setItem('logi_results', JSON.stringify(window.results)); localStorage.setItem('logi_version', APP_VERSION); }
-  function totalPoints(){ return $$('.exercise').reduce((s,ex)=>s+Number(ex.dataset.points||0),0); }
-  function updateScore(){
-      const sum = computeAggregatedScore(window.results||{});
-      scoreEl.textContent = sum;
+    
+    const fb = $('#fb1');
+    if (fb) {
+      fb.textContent = correct ? '✓ Bon ordre !' : '✗ Ordre incorrect. Réessaie.';
+      fb.className = 'feedback ' + (correct ? 'good' : 'bad');
     }
-const navDots = $$('.nav-dot');
-    if(navDots.length){
-      navDots.forEach((dot,i)=>{
-        const exNumber = i+1;
-        const done = Object.keys(window.results).some(k => k.startsWith('ex'+exNumber));
-        dot.classList.toggle('completed', done);
-      });
-    }
-  }
-  function unlockSolutions(ex){ $$('details.sol', ex).forEach(d=>{ d.removeAttribute('aria-disabled'); d.style.display=''; }); }
+    
+    if (correct) unlockSolutions(ex);
+  });
+})();
 
-  // --- Make "first-try" scoring by overriding buttons in capture phase ---
-  function guardButtons(){
-    // ORDER check
-    $$('[data-check-order]').forEach(btn=>{
-      if(btn.dataset.enhanced) return;
-      btn.dataset.enhanced = '1';
-      btn.addEventListener('click', function(e){
-        e.preventDefault(); e.stopImmediatePropagation();
-        const ex = btn.closest('.exercise'); if(!ex) return;
-        const resKey = 'ex'+ex.dataset.ex+'_order';
+// --- Drag & drop matching pour EX2, EX4, EX6, EX7, EX10 ---
+(function() {
+  const dragItems = $$('.label[draggable="true"]');
+  let dragSrc = null;
+  
+  dragItems.forEach(el => {
+    el.addEventListener('dragstart', (e) => {
+      dragSrc = el;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', el.dataset.key);
+    });
+    
+    el.addEventListener('dragend', () => {
+      dragSrc = null;
+    });
+  });
+  
+  const zones = $$('.zone[data-accept]');
+  
+  zones.forEach(zone => {
+    zone.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    });
+    
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      const key = e.dataTransfer.getData('text/plain');
+      if (!key) return;
+      
+      const accepted = zone.dataset.accept;
+      if (accepted !== key) return;
+      
+      const label = dragItems.find(el => el.dataset.key === key);
+      if (!label) return;
+      
+      zone.innerHTML = '<span class="zone-chip" draggable="true" data-key="' + key + '">' + label.textContent + '</span>';
+      zone.dataset.filled = key;
+      zone.classList.add('filled');
+      label.style.display = 'none';
+    });
+  });
+  
+  $$('[data-check-match]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      const ex = e.target.closest('.exercise');
+      if (!ex) return;
+      
+      const id = ex.dataset.ex;
+      const resKey = 'ex' + id;
+      
+      if (results[resKey] !== undefined) {
         const fb = ex.querySelector('.feedback');
-        if(Object.prototype.hasOwnProperty.call(window.results, resKey)){
-          if(fb){ fb.textContent='Déjà validé.'; fb.className='feedback good'; }
-          return;
+        if (fb) {
+          fb.textContent = 'Déjà validé.';
+          fb.className = 'feedback good';
         }
-        // Compute correctness from data-key order
-        const list = ex.querySelector('#orderList') || ex.querySelector('ol.sortable');
-        if(!list){ if(fb){ fb.textContent='Impossible de vérifier.'; fb.className='feedback bad'; } return; }
-        const items = Array.from(list.querySelectorAll('[data-key]'));
-        const now = items.map(li=>li.dataset.key);
-        const correctOrder = items.slice().sort((a,b)=>Number(a.dataset.key)-Number(b.dataset.key)).map(li=>li.dataset.key);
-        const correct = now.join(',')===correctOrder.join(',');
-        const pts = correct ? Number(ex.dataset.points||0) : 0;
-        window.results[resKey] = pts; save(); updateScore();
-        if(fb){ fb.textContent = correct ? '✓ Parfait : ordre exact ! (+'+pts+')' : '✗ Ce n’est pas le bon ordre.'; fb.className='feedback ' + (correct?'good':'bad'); }
-        if(correct) unlockSolutions(ex);
-      }, {capture:true});
-    });
-
-    // MATCH check
-    $$('[data-check-match]').forEach(btn=>{
-      if(btn.dataset.enhanced) return;
-      btn.dataset.enhanced = '1';
-      btn.addEventListener('click', function(e){
-        e.preventDefault(); e.stopImmediatePropagation();
-        const ex = btn.closest('.exercise'); if(!ex) return;
-        const id = ex.dataset.ex;
-        const resKey = 'ex'+id+'_match';
-        const fb = ex.querySelector('.feedback');
-        if(Object.prototype.hasOwnProperty.call(window.results, resKey)){
-          if(fb){ fb.textContent='Déjà validé.'; fb.className='feedback good'; }
-          return;
-        }
-        const zones = $$('.zone[data-accept]', ex);
-        const correct = zones.every(z => z.dataset.filled === z.dataset.accept);
-        const pts = correct ? Number(ex.dataset.points||0) : 0;
-        window.results[resKey] = pts; save(); updateScore();
-        if(fb){ fb.textContent = correct ? '✓ Bon appariement ! (+'+pts+')' : '✗ Appariement incorrect. Réessaie.'; fb.className = 'feedback ' + (correct?'good':'bad'); }
-        if(correct) unlockSolutions(ex);
-      }, {capture:true});
-    });
-
-    // QCM check
-    $$('[data-check-qcm]').forEach(btn=>{
-      if(btn.dataset.enhanced) return;
-      btn.dataset.enhanced = '1';
-      btn.addEventListener('click', function(e){
-        e.preventDefault(); e.stopImmediatePropagation();
-        const qcm = btn.closest('.qcm'); const ex = btn.closest('.exercise');
-        if(!qcm || !ex) return;
-        const id = ex.dataset.ex;
-        const correct = btn.dataset.correct;
-        const radios = qcm.querySelectorAll('input[type=radio]');
-        const selected = Array.from(radios).find(r=>r.checked);
-        const ok = !!selected && selected.value===correct;
-        const fb = qcm.querySelector('.feedback');
-        const fbId = fb && fb.id ? fb.id : ('fb'+id+'q'+Math.random().toString(36).slice(2,5));
-        const resKey = 'ex' + fbId.replace(/^fb/,'');
-        if(Object.prototype.hasOwnProperty.call(window.results, resKey)){
-          if(fb){ fb.textContent = ok ? 'Déjà validé.' : 'Déjà validé (score figé).'; fb.className='feedback '+(ok?'good':'bad'); }
-          return;
-        }
-        const pts = ok ? Number(ex.dataset.points||0) : 0;
-        window.results[resKey] = pts; save(); updateScore();
-        if(fb){ fb.textContent = ok ? '✓ Bonne réponse ! (+'+pts+')' : '✗ Mauvaise réponse.'; fb.className='feedback ' + (ok?'good':'bad'); }
-        if(ok) unlockSolutions(ex);
-      }, {capture:true});
-    });
-
-    // EX5 incohérences
-    const checkErr = document.getElementById('checkErr');
-    if(checkErr && !checkErr.dataset.enhanced){
-      checkErr.dataset.enhanced='1';
-      checkErr.addEventListener('click', function(e){
-        e.preventDefault(); e.stopImmediatePropagation();
-        const ex = checkErr.closest('.exercise');
-        const resKey = 'ex5_err';
-        const fb = document.getElementById('fb5');
-        if(Object.prototype.hasOwnProperty.call(window.results, resKey)){
-          if(fb){ fb.textContent='Déjà validé.'; fb.className='feedback good'; }
-          return;
-        }
-        const checked = new Set(Array.from(document.querySelectorAll('.exercise[data-ex="5"] input.err:checked')).map(i=>i.value));
-        const expected = new Set(['ko1','ko2']);
-        const isEqual = expected.size===checked.size && [...expected].every(v=>checked.has(v));
-        const pts = isEqual ? Number(ex.dataset.points||0) : 0;
-        window.results[resKey] = pts; save(); updateScore();
-        if(fb){ fb.textContent = isEqual ? '✓ Juste : incohérences bien repérées.' : '✗ Mauvais choix. Relis le logigramme.'; fb.className='feedback ' + (isEqual?'good':'bad'); }
-        if(isEqual) unlockSolutions(ex);
-      }, {capture:true});
-    }
-  }
-
-  // --- Allow wrong drops + proper swapping on DESKTOP DnD (if existing code had early return) ---
-  (function relaxDesktopDnD(){
-    $$('script').forEach(s=>{
-      // noop placeholder: we cannot edit other scripts at runtime easily
-    });
-    // Also attach a generic drop handler to zones to ensure wrong drops are allowed
-    const exs = $$('.exercise');
-    exs.forEach(ex=>{
-      if(ex.dataset.dndEnhanced) return;
-      ex.dataset.dndEnhanced='1';
+        return;
+      }
+      
       const zones = $$('.zone[data-accept]', ex);
-      zones.forEach(zone=>{
-        zone.addEventListener('dragover', e=>{ e.preventDefault(); e.dataTransfer.dropEffect='move'; });
-        zone.addEventListener('drop', e=>{
-          e.preventDefault();
-          const key = e.dataTransfer.getData('text/plain');
-          if(!key) return;
-          const labels = $$('.label[draggable="true"]', ex);
-          const label = labels.find(l=>l.dataset.key===key);
-          if(!label) return;
-          // free previous zone of this label
-          const occupied = ex.querySelector(`.zone[data-filled="${key}"]`);
-          if(occupied && occupied !== zone){
-            occupied.textContent=''; occupied.classList.remove('filled'); occupied.removeAttribute('data-filled');
-          }
-          // return previous occupant of this zone
-          const prevKey = zone.dataset.filled;
-          if(prevKey){
-            const prevLabel = labels.find(l=>l.dataset.key===prevKey);
-            if(prevLabel) prevLabel.style.display='';
-          }
-          // place chip
-          zone.innerHTML = '<span class="zone-chip" draggable="true" data-key="'+key+'">'+label.textContent+'</span>';
-          zone.dataset.filled = key;
-          zone.classList.add('filled');
-          // hide pool label for this key
-          label.style.display='none';
-          // mark successful drop
-          window.__lastDropInfo = { key:key, zone:zone, ts:Date.now() };
-          normalizeExercise(ex);
-        });
-      });
+      const correct = zones.every(zone => zone.dataset.filled === zone.dataset.accept);
+      const pts = correct ? Number(ex.dataset.points) : 0;
+      
+      results[resKey] = pts;
+      save();
+      updateScore();
+      
+      const fb = ex.querySelector('.feedback');
+      if (fb) {
+        fb.textContent = correct ? '✓ Bon appariement !' : '✗ Appariement incorrect. Réessaie.';
+        fb.className = 'feedback ' + (correct ? 'good' : 'bad');
+      }
+      
+      if (correct) unlockSolutions(ex);
     });
-  })();
-
-  // --- Pointer-based DnD for tablets ---
-  (function touchDnD(){
-    const isTouch = matchMedia('(pointer:coarse)').matches || 'ontouchstart' in window;
-    if(!isTouch) return;
-    $$('.label[draggable="true"]').forEach(l=> l.setAttribute('draggable','false'));
-    let dragging=null, currentZone=null;
-    function makeGhost(el){
-      const g = el.cloneNode(true);
-      g.classList.add('drag-ghost');
-      g.style.width = (el.getBoundingClientRect().width)+'px';
-      document.body.appendChild(g);
-      return g;
-    }
-    function zoneFromPoint(x,y){
-      const el = document.elementFromPoint(x,y);
-      return el ? el.closest('.zone') : null;
-    }
-    function onPointerDown(e){
-      if(e.pointerType && e.pointerType!=='touch' && e.pointerType!=='pen') return;
-      const exEl = e.target.closest('.exercise'); if(!exEl) return;
-      let label = e.target.closest('.label');
-      const zone = e.target.closest('.zone[data-accept]');
-      if(!label && zone && zone.dataset.filled){
-        // Start drag from a filled zone: unhide pool label and clear the zone
-        const key = zone.dataset.filled; if(!key){ const chip = zone.querySelector('.zone-chip'); if(chip) zone.dataset.filled = chip.dataset.key; }
-        const pool = exEl.querySelector('.label[draggable][data-key="'+key+'"]');
-        if(pool){ pool.style.display=''; label = pool; }
-        zone.textContent=''; zone.classList.remove('filled'); zone.removeAttribute('data-filled');
-    normalizeExercise(ex);
-      }
-      if(!label) return;
-      e.preventDefault();
-      const ex = exEl;
-      const originZone = e.target.closest('.zone[data-accept]');
-      dragging = {label, ex, ghost: makeGhost(label), originZone: originZone};
-      if(originZone && originZone.dataset.filled===label.dataset.key){
-        // clear origin zone (moving from zone)
-        originZone.textContent=''; originZone.classList.remove('filled'); originZone.removeAttribute('data-filled');
-      }
-      document.body.classList.add('dragging');
-      label.classList.add('dragging'); label.style.opacity='0.2';
-      onPointerMove(e);
-      window.addEventListener('pointermove', onPointerMove, {passive:false});
-      window.addEventListener('pointerup', onPointerUp, {passive:false, once:true});
-    window.addEventListener('pointercancel', onPointerUp, {passive:false, once:true});
-    }
-    function onPointerMove(e){
-      if(!dragging) return;
-      e.preventDefault();
-      dragging.ghost.style.left = e.clientX+'px';
-      dragging.ghost.style.top  = e.clientY+'px';
-      const z = zoneFromPoint(e.clientX, e.clientY);
-      if(z !== currentZone){
-        if(currentZone) currentZone.classList.remove('hover');
-        currentZone = z;
-        if(currentZone) currentZone.classList.add('hover');
-      }
-    }
-    function onPointerUp(e){
-      if(!dragging) return;
-      e.preventDefault();
-      let dropped = false;
-      if(currentZone && dragging.ex && currentZone.closest('.exercise')===dragging.ex){
-        const labels = $$('.label', dragging.ex);
-        const key = dragging.label.dataset.key;
-        // free previous zone of this label
-        const occupied = dragging.ex.querySelector(`.zone[data-filled="${key}"]`);
-        if(occupied && occupied !== currentZone){
-          occupied.textContent=''; occupied.classList.remove('filled'); occupied.removeAttribute('data-filled');
-        }
-        // return previous occupant
-        const prevKey = currentZone.dataset.filled;
-        if(prevKey){
-          const prevLabel = labels.find(l=>l.dataset.key===prevKey);
-          if(prevLabel) prevLabel.style.display='';
-        }
-        currentZone.innerHTML = '<span class="zone-chip" draggable="true" data-key="'+key+'">'+dragging.label.textContent+'</span>';
-        currentZone.dataset.filled = key;
-        currentZone.classList.add('filled');
-        dragging.label.style.display='none';
-        dropped = true;
-        normalizeExercise(dragging.ex);
-      }
-      if(!dropped && dragging.originZone){
-        // restore to origin zone
-        const key = dragging.label.dataset.key;
-        const poolText = dragging.label.textContent;
-        dragging.originZone.innerHTML = '<span class="zone-chip" draggable="true" data-key="'+key+'">'+poolText+'</span>';
-        dragging.originZone.dataset.filled = key;
-        dragging.originZone.classList.add('filled');
-        normalizeExercise(dragging.ex);
-        dragging.label.style.display='none';
-      }
-      if(currentZone){ currentZone.classList.remove('hover'); currentZone=null; }
-      dragging.label.classList.remove('dragging'); dragging.label.style.opacity='';
-      if(dragging.ghost && dragging.ghost.parentNode) dragging.ghost.parentNode.removeChild(dragging.ghost);
-      dragging=null; document.body.classList.remove('dragging');
-      window.removeEventListener('pointermove', onPointerMove);
-    }
-    document.addEventListener('pointerdown', onPointerDown, {passive:false});
-  })();
-
-  // --- SVG scaling controls per exercise ---
-  // setupSvgScales removed);
-})();
-
-
-// --- Touch sortable for EX1 (chips) ---
-(function(){
-  const isTouch = matchMedia('(pointer:coarse)').matches || 'ontouchstart' in window;
-  if(!isTouch) return; // desktop garde le DnD natif existant
-
-  const ex = document.querySelector('.exercise[data-ex="1"]');
-  if(!ex) return;
-  const list = ex.querySelector('#orderList') || ex.querySelector('ol.sortable');
-  if(!list) return;
-
-  // Ensure chips are not native-draggable on touch to avoid conflicts
-  list.querySelectorAll('.chip').forEach(ch => ch.setAttribute('draggable','false'));
-
-  let drag = null; // {chip, ghost, placeholder, startY}
-  function makeGhost(el){
-    const r = el.getBoundingClientRect();
-    const g = el.cloneNode(true);
-    g.classList.add('drag-ghost');
-    g.style.width = r.width+'px';
-    document.body.appendChild(g);
-    return g;
-  }
-  function makePlaceholder(el){
-    const ph = document.createElement('li');
-    ph.className = 'chip placeholder';
-    ph.style.height = el.getBoundingClientRect().height + 'px';
-    ph.textContent = el.textContent;
-    return ph;
-  }
-
-  function onPointerDown(e){
-    const chip = e.target.closest('.chip');
-    if(!chip || !list.contains(chip)) return;
-    if(e.pointerType && e.pointerType!=='touch' && e.pointerType!=='pen') return;
-    e.preventDefault();
-
-    document.body.classList.add('dragging');
-    drag = {
-      chip,
-      ghost: makeGhost(chip),
-      placeholder: makePlaceholder(chip),
-    };
-    chip.style.opacity = '0.2';
-    chip.classList.add('dragging');
-    chip.after(drag.placeholder);
-
-    moveGhost(e.clientX, e.clientY);
-    window.addEventListener('pointermove', onPointerMove, {passive:false});
-    window.addEventListener('pointerup', onPointerUp, {passive:false, once:true});
-    window.addEventListener('pointercancel', onPointerUp, {passive:false, once:true});
-  }
-
-  function moveGhost(x,y){
-    if(!drag) return;
-    drag.ghost.style.left = x+'px';
-    drag.ghost.style.top  = y+'px';
-    // Find the element under the pointer within the list
-    const el = document.elementFromPoint(x,y);
-    if(!el) return;
-    const targetChip = el.closest('.chip');
-    if(targetChip && targetChip !== drag.chip && targetChip !== drag.placeholder && list.contains(targetChip)){
-      const targetRect = targetChip.getBoundingClientRect();
-      const before = (y < targetRect.top + targetRect.height/2);
-      if(before) list.insertBefore(drag.placeholder, targetChip);
-      else list.insertBefore(drag.placeholder, targetChip.nextSibling);
-    }
-  }
-
-  function onPointerMove(e){
-    if(!drag) return;
-    e.preventDefault();
-    moveGhost(e.clientX, e.clientY);
-  }
-
-  function onPointerUp(e){
-    if(!drag) return;
-    e.preventDefault();
-    // Insert chip at placeholder position
-    if(drag.placeholder.parentNode === list){
-      list.insertBefore(drag.chip, drag.placeholder);
-    }
-    drag.chip.classList.remove('dragging');
-    drag.chip.style.opacity = '';
-    if(drag.ghost && drag.ghost.parentNode) drag.ghost.parentNode.removeChild(drag.ghost);
-    if(drag.placeholder && drag.placeholder.parentNode) drag.placeholder.parentNode.removeChild(drag.placeholder);
-    drag = null;
-    document.body.classList.remove('dragging');
-    window.removeEventListener('pointermove', onPointerMove);
-  }
-
-  list.addEventListener('pointerdown', onPointerDown, {passive:false});
-})();
-
-
-// --- Allow clearing a zone by click/tap to change placement ---
-(function(){
-  document.addEventListener('click', function(e){
-    const zone = e.target.closest('.zone[data-accept]');
-    if(!zone) return;
-    const ex = zone.closest('.exercise'); if(!ex) return;
-    const key = zone.dataset.filled; if(!key){ const chip = zone.querySelector('.zone-chip'); if(chip) zone.dataset.filled = chip.dataset.key; }
-    if(!key) return; // empty zone, nothing to clear
-    const label = ex.querySelector('.label[draggable][data-key="'+key+'"]');
-    if(label){
-      label.style.display = '';
-    }
-    zone.textContent = '';
-    zone.classList.remove('filled');
-    zone.removeAttribute('data-filled');
-    normalizeExercise(ex);
   });
 })();
 
-
-// --- Enable dragging from filled zones (desktop): .zone-chip ---
-(function(){
-  let dragFromZone = null;
-  document.addEventListener('dragstart', function(e){
-    const chip = e.target.closest('.zone-chip');
-    if(!chip) return;
-    const zone = chip.closest('.zone[data-accept]');
-    const ex = chip.closest('.exercise');
-    if(!zone || !ex) return;
-    const key = chip.dataset.key;
-    const label = ex.querySelector('.label[draggable][data-key="'+key+'"]');
-    if(label){
-      // Make pool label available to follow desktop DnD logic
-      label.style.display = '';
-      e.dataTransfer.setData('text/plain', key);
-      dragFromZone = zone;
-      // Clear origin zone right away
-      zone.textContent = '';
-      zone.classList.remove('filled');
-      zone.removeAttribute('data-filled');
-    normalizeExercise(ex);
-    }
-  });
-  document.addEventListener('dragend', function(e){
-    // If no zone registered a drop for this key recently, restore to origin
-    if(dragFromZone){
-      const key = (e.target && e.target.dataset && e.target.dataset.key) || null;
-      const info = window.__lastDropInfo || {};
-      const recent = info.key===key && (Date.now()-info.ts)<1000;
-      if(!recent){
-        const ex = dragFromZone.closest('.exercise');
-        if(ex && key){
-          const labels = $$('.label[draggable="true"]', ex);
-          const pool = labels.find(l=>l.dataset.key===key);
-          // re-fill origin zone with chip and hide pool label again
-          if(pool){
-            dragFromZone.innerHTML = '<span class="zone-chip" draggable="true" data-key="'+key+'">'+pool.textContent+'</span>';
-            dragFromZone.dataset.filled = key;
-            dragFromZone.classList.add('filled');
-            pool.style.display='none';
-          normalizeExercise(ex);
-          }
+// --- QCM pour EX3, EX4, EX5, EX6, EX8 ---
+(function() {
+  $$('[data-check-qcm]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      const qcm = e.target.closest('.qcm');
+      const ex = e.target.closest('.exercise');
+      if (!qcm || !ex) return;
+      
+      const id = ex.dataset.ex;
+      const correctValue = e.target.dataset.correct;
+      const radios = qcm.querySelectorAll('input[type=radio]');
+      const selected = Array.from(radios).find(r => r.checked);
+      const isCorrect = !!selected && selected.value === correctValue;
+      
+      // Créer une clé unique pour chaque QCM
+      const qcmIndex = Array.from($$('[data-check-qcm]', ex)).indexOf(btn);
+      const resKey = 'ex' + id + '_qcm' + (qcmIndex > 0 ? qcmIndex : '');
+      
+      if (results[resKey] !== undefined) {
+        const fb = qcm.querySelector('.feedback');
+        if (fb) {
+          fb.textContent = isCorrect ? 'Déjà validé.' : 'Déjà validé (score figé).';
+          fb.className = 'feedback ' + (isCorrect ? 'good' : 'bad');
         }
+        return;
       }
-    }
-    dragFromZone = null;
+      
+      const pts = isCorrect ? Number(ex.dataset.points) : 0;
+      results[resKey] = pts;
+      save();
+      updateScore();
+      
+      const fb = qcm.querySelector('.feedback');
+      if (fb) {
+        fb.textContent = isCorrect ? '✓ Bonne réponse !' : '✗ Réponse incorrecte. Réessaie.';
+        fb.className = 'feedback ' + (isCorrect ? 'good' : 'bad');
+      }
+      
+      if (isCorrect) unlockSolutions(ex);
+    });
   });
 })();
 
-</script>
+// --- EX5: Détection d'erreurs ---
+(function() {
+  const btn = $('#checkErr');
+  if (!btn) return;
+  
+  btn.addEventListener('click', () => {
+    const ex = btn.closest('.exercise');
+    const id = ex.dataset.ex;
+    const resKey = 'ex' + id;
+    
+    if (results[resKey] !== undefined) {
+      const fb = $('#fb5');
+      if (fb) {
+        fb.textContent = 'Déjà validé.';
+        fb.className = 'feedback good';
+      }
+      return;
+    }
+    
+    const checks = $$('.err:checked', ex);
+    const correct = checks.length === 2 && 
+                   checks.some(c => c.value === 'ko1') && 
+                   checks.some(c => c.value === 'ko2');
+    const pts = correct ? Number(ex.dataset.points) : 0;
+    
+    results[resKey] = pts;
+    save();
+    updateScore();
+    
+    const fb = $('#fb5');
+    if (fb) {
+      fb.textContent = correct ? '✓ Erreurs bien identifiées !' : '✗ Pas tout à fait. Réessaie.';
+      fb.className = 'feedback ' + (correct ? 'good' : 'bad');
+    }
+    
+    if (correct) unlockSolutions(ex);
+  });
+})();
+
+// Initialisation
+totalEl.textContent = totalPoints();
+updateScore();
+show(0);
+  </script>
 </body>
 </html>
