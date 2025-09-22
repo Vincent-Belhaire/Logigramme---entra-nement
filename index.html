@@ -475,6 +475,58 @@ window.__lastDropInfo = { key:null, zone:null, ts:0 };
     const $ = (sel, root=document) => root.querySelector(sel);
     const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
 
+// --- Scoring config & aggregation (prevents > total) ---
+const ORDER_POINTS = { '1':10 };
+const MATCH_POINTS = { '2':5, '4':3, '6':3, '7':4, '10':4 };
+const ERR_POINTS   = { '5':3 };
+// QCM keys as stored in results (from feedback IDs): ex3, ex4, ex5q, ex6q, ex8a, ex8b
+const QCM_POINTS  = { 'ex3':3, 'ex4':1, 'ex5q':2, 'ex6q':2, 'ex8a':1, 'ex8b':2 };
+
+function computeAggregatedScore(res){
+  const taken = new Set();
+  let sum = 0;
+
+  for(const [k,v] of Object.entries(res||{})){
+    if(!v) continue;
+    // ORDER
+    let m = k.match(/^ex(1)_order$/);
+    if(m){
+      const key = `ex${m[1]}_order`;
+      if(taken.has(key)) continue;
+      const pts = ORDER_POINTS[m[1]]||0;
+      if(pts){ sum += Math.min(Number(v)||0, pts); taken.add(key); }
+      continue;
+    }
+    // MATCH
+    m = k.match(/^ex(2|4|6|7|10)_match$/);
+    if(m){
+      const exId = m[1];
+      const key = `ex${exId}_match`;
+      if(taken.has(key)) continue;
+      const pts = MATCH_POINTS[exId]||0;
+      if(pts){ sum += Math.min(Number(v)||0, pts); taken.add(key); }
+      continue;
+    }
+    // ERR (ex5)
+    if(k==='ex5_err'){
+      if(taken.has('ex5_err')) continue;
+      const pts = ERR_POINTS['5']||0;
+      if(pts){ sum += Math.min(Number(v)||0, pts); taken.add('ex5_err'); }
+      continue;
+    }
+    // QCM exact keys
+    if(QCM_POINTS.hasOwnProperty(k)){
+      if(taken.has(k)) continue;
+      const pts = QCM_POINTS[k]||0;
+      if(pts){ sum += Math.min(Number(v)||0, pts); taken.add(k); }
+      continue;
+    }
+    // Unknown keys are ignored (avoid double-count artifacts)
+  }
+  return sum;
+}
+
+
     const exercises = $$('.exercise');
     const scoreEl = $('#score');
     const totalEl = $('#total');
@@ -484,11 +536,11 @@ window.__lastDropInfo = { key:null, zone:null, ts:0 };
     const exportBtn = $('#exportBtn');
 
     let current = 0;
-    const APP_VERSION='1.5.2';
+    const APP_VERSION='1.5.3';
     let results = (function(){ try{ return JSON.parse(localStorage.getItem('logi_results')||'{}'); }catch(e){ return {}; } })();
 window.results = results;
     try{ results = JSON.parse(localStorage.getItem('logi_results')||'{}'); }catch(e){ results = {}; }
-    /* version check removed to preserve scores */
+    /* keep scores across versions */
 localStorage.setItem('logi_version', APP_VERSION);
 
     function totalPoints(){
@@ -496,14 +548,13 @@ localStorage.setItem('logi_version', APP_VERSION);
     }
     totalEl.textContent = totalPoints();
 
-    function save(){ window.results = results; localStorage.setItem('logi_results', JSON.stringify(window.results)); localStorage.setItem('logi_version', APP_VERSION); }
+    function save(){ localStorage.setItem('logi_results', JSON.stringify(results)); localStorage.setItem('logi_version', APP_VERSION); }
 
     function updateScore(){
-      const sum = Object.values(window.results||{}).reduce((a,b)=>a+Number(b||0),0);
+      const sum = computeAggregatedScore(window.results||{});
       scoreEl.textContent = sum;
     }
-
-    function unlockSolutions(ex){
+function unlockSolutions(ex){
       // Rend visibles les <details class="sol"> de l'exercice passé
       $$('details.sol[aria-disabled="true"]', ex).forEach(d=>d.setAttribute('aria-disabled','false'));
       $$('details.sol', ex).forEach(d=>{ if(d.getAttribute('aria-disabled')==='false'){ d.style.display='block'; } });
@@ -748,25 +799,23 @@ let dragEl = null;
     })();
 
     // --- Initialisation ---
-    results = window.results || results; updateScore();
+    updateScore();
     show(0);
   </script>
 <script>
 /* === Enhancements JS: unified scoring, svg scaling, tablet DnD === */
 (function(){
   window.results = window.results || (function(){ try{ return JSON.parse(localStorage.getItem('logi_results')||'{}'); }catch(e){ return {}; } })();
-  const APP_VERSION = window.APP_VERSION || '1.5.2';
+  const APP_VERSION = window.APP_VERSION || '1.4.0';
   const $ = (sel, root=document)=>root.querySelector(sel);
   const $$ = (sel, root=document)=>Array.from(root.querySelectorAll(sel));
   function save(){ localStorage.setItem('logi_results', JSON.stringify(window.results)); localStorage.setItem('logi_version', APP_VERSION); }
   function totalPoints(){ return $$('.exercise').reduce((s,ex)=>s+Number(ex.dataset.points||0),0); }
   function updateScore(){
-    const sum = Object.values(window.results).reduce((a,b)=>a+Number(b||0),0);
-    const scoreEl = document.getElementById('score'); if(scoreEl) scoreEl.textContent = sum;
-    const totalEl = document.getElementById('total'); if(totalEl) totalEl.textContent = totalPoints();
-    const progressBar = document.getElementById('progressBar');
-    if(progressBar){ const pct = totalPoints() ? (sum/totalPoints())*100 : 0; progressBar.style.width = pct+'%'; }
-    const navDots = $$('.nav-dot');
+      const sum = computeAggregatedScore(window.results||{});
+      scoreEl.textContent = sum;
+    }
+const navDots = $$('.nav-dot');
     if(navDots.length){
       navDots.forEach((dot,i)=>{
         const exNumber = i+1;
