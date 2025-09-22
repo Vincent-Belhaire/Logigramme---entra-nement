@@ -81,6 +81,47 @@
     .exercise[data-ex="6"] .zone{width:100%;min-height:64px}
   
     .qcm .feedback{display:inline-block;margin-left:10px}
+  
+    /* === Enhancements: touch + svg scaling === */
+    :root{ --touchTarget: 52px; }
+    .label,.zone,.btn,.chip,.qcm label{ min-height: var(--touchTarget); }
+    .label,.zone{ touch-action:none; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
+    .drag-ghost{ position:fixed; pointer-events:none; z-index:9999; opacity:.9; transform:translate(-50%,-50%); }
+    @media (pointer:coarse){
+      .btn{ padding:14px 16px; border-radius:14px; }
+      .label{ padding:12px 14px; font-size:17px; }
+      .zone{ padding:12px; border-width:3px; }
+      .qcm label{ padding:12px; font-size:17px; }
+    }
+    .diagram{ overflow: visible; }
+    .diagram img{ max-width:none; height:auto; display:block; transform-origin: top left; }
+
+    /* Remove zoom buttons, adjust spacing */
+    .svg-scale{display:flex;align-items:center;gap:8px;margin:8px 0 12px 0;font-size:14px}
+    .svg-scale input[type=range]{width:180px}
+
+    /* Sortable touch placeholder */
+    .chip.placeholder{opacity:.4;border-style:dashed}
+
+    /* Prevent page scroll while dragging (tablet) */
+    body.dragging{ touch-action:none; overflow:hidden; }
+    /* Make EX1 sortable touch-friendly */
+    ol.sortable, .chip{ touch-action:none; -webkit-user-select:none; user-select:none; }
+    /* Avoid image intercepting touches while dragging elsewhere */
+    .diagram img{ pointer-events:none; }
+
+    .svg-scale{display:none !important}
+
+    .zone{cursor:pointer}
+
+    /* Draggable chip inside zones (for re-placement) */
+    .zone-chip{ display:inline-flex; align-items:center; gap:8px; padding:6px 8px; border-radius:8px; background:#fff; border:1px dashed var(--border, #d5d9e2); cursor:grab; user-select:none; -webkit-user-select:none; }
+    .zone-chip:active{ cursor:grabbing; }
+    .zone{ touch-action:none; } /* prevent scroll during drag over zones */
+
+    /* Ensure labels pool keeps space even when empty */
+    .labels{ min-height: 44px; }
+
   </style>
 </head>
 <body>
@@ -103,11 +144,11 @@
     <section class="exercise active" data-ex="1" data-points="10">
       <div class="card">
         <p class="title">Exercice 1 — Feu tricolore (remettre les étapes dans l'ordre)</p>
-        <p class="subtitle">But : reconstituer le cycle complet avec les <strong>durées</strong>. Les étapes sont à remettre dans l’ordre logique ; la liste est <strong>mélangée</strong>.</p>
+        <p class="subtitle">But : reconstituer le cycle complet avec les <strong>durées</strong>. Les étapes sont à remettre dans l'ordre logique ; la liste est <strong>mélangée</strong>.</p>
         <div class="grid cols-2">
           <div class="diagram">
-<img src="Feu tricolore.svg" alt="Logigramme Feu tricolore" style="max-width:200%;height:auto;">
-</div>
+            <img src="Feu tricolore.svg" alt="Logigramme Feu tricolore" style="max-width:150%;height:auto;">
+          </div>
           <div>
             <ol class="sortable" id="orderList">
               <!-- data-key = position attendue; la liste sera mélangée au chargement -->
@@ -124,65 +165,68 @@
             </ol>
             <div class="toolbar">
               <button class="btn good" data-check-order>Vérifier</button>
-              
               <div id="fb1" class="feedback" aria-live="polite"></div>
             </div>
           </div>
         </div>
       </div>
-   </section>
-<section class="exercise" data-ex="2" data-points="5">
-  <div class="card">
-    <h2>Exercice 2 — Détecteur de mouvement (appartement)</h2>
-    <p>
-      But : associer chaque <strong>élément</strong> du logigramme à la bonne zone
-      (condition, action, <em>événement</em>, temporisation, etc.).
-    </p>
-    <div class="grid cols-2">
-      <!-- Diagramme à gauche -->
-      <div class="diagram overlay" id="diagram2">
-        <img src="Detecteur lampe.svg" alt="Logigramme détecteur de mouvement"
-             style="max-width:50%;height:auto;pointer-events:none;">
-      </div>
+    </section>
 
-      <!-- Étiquettes + zones à droite -->
-      <div>
-        <div class="labels" id="labels2">
-          <div class="label" draggable="true" data-key="presence">Vérifier la présence de mouvement</div>
-          <div class="label" draggable="true" data-key="allumer">Si mouvement → allumer la lampe</div>
-          <div class="label" draggable="true" data-key="attendre">Attendre 30 secondes</div>
-          <div class="label" draggable="true" data-key="eteindre">Éteindre la lampe</div>
-          <div class="label" draggable="true" data-key="boucle">Retour à l'attente</div>
+    <!-- EX 2: Détecteur de mouvement -->
+    <section class="exercise" data-ex="2" data-points="5">
+      <div class="card">
+        <h2 class="title">Exercice 2 — Détecteur de mouvement (appartement)</h2>
+        <p class="subtitle">But : associer chaque <strong>élément</strong> du logigramme à la bonne zone (condition, action, <em>événement</em>, temporisation, etc.).</p>
+        <div class="grid cols-2">
+          <div class="diagram overlay" id="diagram2">
+            <img src="Detecteur lampe.svg" alt="Logigramme détecteur de mouvement" style="max-width:50%;height:auto;pointer-events:none;">
+          </div>
+          <div>
+            <div class="labels" id="labels2">
+              <div class="label" draggable="true" data-key="presence">Vérifier la présence de mouvement</div>
+              <div class="label" draggable="true" data-key="allumer">Si mouvement → allumer la lampe</div>
+              <div class="label" draggable="true" data-key="attendre">Attendre 30 secondes</div>
+              <div class="label" draggable="true" data-key="eteindre">Éteindre la lampe</div>
+              <div class="label" draggable="true" data-key="boucle">Retour à l'attente</div>
+            </div>
+            <p style="margin-top:10px"><strong>Dépose ici tes étiquettes :</strong></p>
+            <div class="zones" style="display:grid;gap:10px">
+              <div class="zone" data-accept="presence" title="Vérifier mouvement ?"></div>
+              <div class="zone" data-accept="allumer" title="Allumer lampe"></div>
+              <div class="zone" data-accept="attendre" title="Attendre 30 s"></div>
+              <div class="zone" data-accept="eteindre" title="Éteindre lampe"></div>
+              <div class="zone" data-accept="boucle" title="Retour à l'attente"></div>
+            </div>
+          </div>
         </div>
-
-        <p style="margin-top:10px"><strong>Dépose ici tes étiquettes :</strong></p>
-        <div class="zones" style="display:grid;gap:10px">
-          <div class="zone" data-accept="presence" title="Vérifier mouvement ?"></div>
-          <div class="zone" data-accept="allumer" title="Allumer lampe"></div>
-          <div class="zone" data-accept="attendre" title="Attendre 30 s"></div>
-          <div class="zone" data-accept="eteindre" title="Éteindre lampe"></div>
-          <div class="zone" data-accept="boucle" title="Retour à l'attente"></div>
+        <div class="toolbar">
+          <button class="btn good" data-check-match>Vérifier</button>
+          <span id="fb2" class="feedback" aria-live="polite"></span>
         </div>
       </div>
-    </div>
-    <div class="toolbar"><button class="btn good" data-check-match>Vérifier</button><span id="fb2" class="feedback" aria-live="polite"></span></div></div>
-  </div>
-</section>
+    </section>
 
     <!-- EX 3: Portail électrique (QCM logique) -->
     <section class="exercise" data-ex="3" data-points="3">
       <div class="card">
         <p class="title">Exercice 3 — Portail électrique (QCM condition)</p>
         <p class="subtitle">But : comprendre la décision « portail fermé ? » en réponse à une <strong>demande de fermeture</strong>.</p>
-        <div class="diagram overlay"><img src="Portail.svg" alt="Logigramme portail électrique" style="max-width:30%;height:auto;">
-<small></small></div>
+        <div class="diagram overlay">
+          <img src="Portail.svg" alt="Logigramme portail électrique" style="max-width:30%;height:auto;">
+        </div>
         <div class="qcm" id="qcm3">
           <p><strong>Question :</strong> Le récepteur reçoit une <strong>demande de fermeture</strong>. Le logigramme vérifie : « le portail est‑il fermé ? ». Que se passe‑t‑il si la réponse est <em>NON</em> ?</p>
           <label><input type="radio" name="q3" value="a"> a) Le moteur ouvre le portail</label>
           <label><input type="radio" name="q3" value="b"> b) Le moteur ferme le portail</label>
           <label><input type="radio" name="q3" value="c"> c) Rien ne se passe</label>
-          <div class="toolbar"><button class="btn good" data-check-qcm data-correct="b">Vérifier</button><span id="fb3" class="feedback" aria-live="polite"></span></div>
-          <details class="sol" aria-disabled="true"><summary>Afficher la solution</summary><p class="right">Réponse : b) Le moteur <strong>ferme</strong> le portail (demande de fermeture et test « NON » = pas encore fermé → on ferme).</p></details>
+          <div class="toolbar">
+            <button class="btn good" data-check-qcm data-correct="b">Vérifier</button>
+            <span id="fb3" class="feedback" aria-live="polite"></span>
+          </div>
+          <details class="sol" aria-disabled="true">
+            <summary>Afficher la solution</summary>
+            <p class="right">Réponse : b) Le moteur <strong>ferme</strong> le portail (demande de fermeture et test « NON » = pas encore fermé → on ferme).</p>
+          </details>
         </div>
       </div>
     </section>
@@ -192,8 +236,9 @@
       <div class="card">
         <p class="title">Exercice 4 — Ventilation d'une salle (appariement + QCM)</p>
         <p class="subtitle">But : associer condition ↔ action, puis identifier la boucle.</p>
-        <div class="diagram overlay"><img src="Ventilation.svg" alt="Logigramme ventilation" style="max-width:40%;height:auto;">
-<small></small></div>
+        <div class="diagram overlay">
+          <img src="Ventilation.svg" alt="Logigramme ventilation" style="max-width:40%;height:auto;">
+        </div>
         <div class="grid cols-2">
           <div>
             <p><strong>Associez :</strong></p>
@@ -212,16 +257,25 @@
               <label><input type="radio" name="q4" value="a"> Il recommence immédiatement</label>
               <label><input type="radio" name="q4" value="b"> Il attend 2 minutes puis recommence</label>
               <label><input type="radio" name="q4" value="c"> Il s'arrête</label>
-              <div class="toolbar"><button class="btn good" data-check-qcm data-correct="b">Vérifier</button><span id="fb4" class="feedback" aria-live="polite"></span></div>
-              <details class="sol" aria-disabled="true"><summary>Afficher la solution</summary><p class="right">Réponse : « attendre 2 minutes puis recommencer ».</p></details>
+              <div class="toolbar">
+                <button class="btn good" data-check-qcm data-correct="b">Vérifier</button>
+                <span id="fb4" class="feedback" aria-live="polite"></span>
+              </div>
+              <details class="sol" aria-disabled="true">
+                <summary>Afficher la solution</summary>
+                <p class="right">Réponse : « attendre 2 minutes puis recommencer ».</p>
+              </details>
             </div>
           </div>
         </div>
-        <div class="toolbar"><button class="btn good" data-check-match>Vérifier les appariements</button><span id="fb4m" class="feedback" aria-live="polite"></span></div>
+        <div class="toolbar">
+          <button class="btn good" data-check-match>Vérifier les appariements</button>
+          <span id="fb4m" class="feedback" aria-live="polite"></span>
+        </div>
       </div>
     </section>
 
-    <!-- EX 5: Station météo (détection d'erreurs + QCM logique) - CORRIGÉ -->
+    <!-- EX 5: Station météo (détection d'erreurs + QCM logique) -->
     <section class="exercise" data-ex="5" data-points="5">
       <div class="card">
         <p class="title">Exercice 5 — Station météo (analyse & correction)</p>
@@ -229,7 +283,6 @@
         <div class="grid cols-2">
           <div class="diagram overlay">
             <img src="Station meteo.svg" alt="Logigramme station météo" style="max-width:90%;height:auto;">
-            <small></small>
           </div>
           <div>
             <div style="display:grid;gap:8px;width:100%">
@@ -240,7 +293,10 @@
               <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" class="err" value="ok3"> 5) « Boucle : attendre 1 minute puis revérifier »</label>
             </div>
             <p style="margin-top:10px"><strong>Question :</strong> Coche uniquement les <em>éléments incohérents</em> du pseudo-logigramme.</p>
-            <div class="toolbar"><button class="btn bad" id="checkErr">Vérifier les incohérences</button><span id="fb5" class="feedback" aria-live="polite"></span></div>
+            <div class="toolbar">
+              <button class="btn bad" id="checkErr">Vérifier les incohérences</button>
+              <span id="fb5" class="feedback" aria-live="polite"></span>
+            </div>
           </div>
         </div>
         <hr style="border-color:#dfe6f1; margin: 20px 0;" />
@@ -251,15 +307,21 @@
               <label><input type="radio" name="q5" value="a"> Ouvrir le store</label>
               <label><input type="radio" name="q5" value="b"> Fermer le store</label>
               <label><input type="radio" name="q5" value="c"> Allumer la lumière</label>
-              <div class="toolbar"><button class="btn good" data-check-qcm data-correct="b">Vérifier</button><span class="feedback" id="fb5q"></span></div>
-              <details class="sol" aria-disabled="true"><summary>Afficher la solution</summary><p class="right">Réponse : « Fermer le store » si pluie détectée.</p></details>
+              <div class="toolbar">
+                <button class="btn good" data-check-qcm data-correct="b">Vérifier</button>
+                <span class="feedback" id="fb5q"></span>
+              </div>
+              <details class="sol" aria-disabled="true">
+                <summary>Afficher la solution</summary>
+                <p class="right">Réponse : « Fermer le store » si pluie détectée.</p>
+              </details>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- EX 6: Badge d'accès (appariement + QCM) - CORRIGÉ -->
+    <!-- EX 6: Badge d'accès (appariement + QCM) -->
     <section class="exercise" data-ex="6" data-points="5">
       <div class="card">
         <p class="title">Exercice 6 — Badge d'accès (appariement + QCM)</p>
@@ -315,8 +377,9 @@
       <div class="card">
         <p class="title">Exercice 7 — Thermostat (QCM + appariement)</p>
         <div class="grid cols-2">
-          <div class="diagram overlay"><img src="Thermostat.svg" alt="Logigramme thermostat" style="max-width:100%;height:auto;">
-<small></small></div>
+          <div class="diagram overlay">
+            <img src="Thermostat.svg" alt="Logigramme thermostat" style="max-width:100%;height:auto;">
+          </div>
           <div>
             <p><strong>Associez :</strong></p>
             <div class="grid zones" style="grid-template-columns:1fr 1fr">
@@ -329,7 +392,10 @@
               <div class="label" draggable="true" data-key="cool">Allumer la climatisation</div>
               <div class="label" draggable="true" data-key="idle">Attendre / ne rien faire</div>
             </div>
-            <div class="toolbar"><button class="btn good" data-check-match>Vérifier</button><span class="feedback" id="fb7"></span></div>
+            <div class="toolbar">
+              <button class="btn good" data-check-match>Vérifier</button>
+              <span class="feedback" id="fb7"></span>
+            </div>
           </div>
         </div>
       </div>
@@ -339,24 +405,29 @@
     <section class="exercise" data-ex="8" data-points="3">
       <div class="card">
         <p class="title">Exercice 8 — Passage piéton intelligent (QCM)</p>
-        <div class="diagram overlay"><img src="Passage pieton.svg" alt="Logigramme passage piéton" style="max-width:30%;height:auto;">
-<small></small></div>
+        <div class="diagram overlay">
+          <img src="Passage pieton.svg" alt="Logigramme passage piéton" style="max-width:30%;height:auto;">
+        </div>
         <div class="qcm">
-<p>Un piéton appuie sur le bouton. Que se passe-t-il d’abord ?</p>
+          <p>Un piéton appuie sur le bouton. Que se passe-t-il d'abord ?</p>
           <label><input type="radio" name="q8a" value="a"> Les feux voitures passent immédiatement au rouge</label>
           <label><input type="radio" name="q8a" value="b"> Le système attend que le cycle voiture se termine puis bascule</label>
           <label><input type="radio" name="q8a" value="c"> Rien du tout</label>
-          <div class="toolbar"><button class="btn good" data-check-qcm data-correct="b">Vérifier</button><span class="feedback" id="fb8a"></span></div>
-</div>
-<div class="qcm">
-
+          <div class="toolbar">
+            <button class="btn good" data-check-qcm data-correct="b">Vérifier</button>
+            <span class="feedback" id="fb8a"></span>
+          </div>
+        </div>
+        <div class="qcm">
           <p>Pendant la traversée piéton, que doivent afficher les feux voitures ?</p>
           <label><input type="radio" name="q8b" value="a"> Orange clignotant</label>
           <label><input type="radio" name="q8b" value="b"> Rouge fixe</label>
           <label><input type="radio" name="q8b" value="c"> Vert</label>
-          <div class="toolbar"><button class="btn good" data-check-qcm data-correct="b">Vérifier</button><span class="feedback" id="fb8b"></span>
-</div>
-</div>
+          <div class="toolbar">
+            <button class="btn good" data-check-qcm data-correct="b">Vérifier</button>
+            <span class="feedback" id="fb8b"></span>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -365,8 +436,9 @@
       <div class="card">
         <p class="title">Exercice 10 — Alerte inondation (logique seuils)</p>
         <div class="grid cols-2">
-          <div class="diagram overlay"><img src="Alerte inondation.svg" alt="Logigramme alerte inondation" style="max-width:250%;height:auto;">
-<small></div>
+          <div class="diagram overlay">
+            <img src="Alerte inondation.svg" alt="Logigramme alerte inondation" style="max-width:250%;height:auto;">
+          </div>
           <div>
             <p><strong>Associez les niveaux au comportement :</strong></p>
             <div class="grid zones" style="grid-template-columns:1fr 1fr">
@@ -379,7 +451,10 @@
               <div class="label" draggable="true" data-key="warn">Alerte visuelle locale</div>
               <div class="label" draggable="true" data-key="alarm">Sirène + notification</div>
             </div>
-            <div class="toolbar"><button class="btn good" data-check-match>Vérifier</button><span class="feedback" id="fb10"></span></div>
+            <div class="toolbar">
+              <button class="btn good" data-check-match>Vérifier</button>
+              <span class="feedback" id="fb10"></span>
+            </div>
           </div>
         </div>
       </div>
@@ -388,354 +463,360 @@
   </main>
 
   <script>
-    // --- Helpers & state ---
-    const $ = (sel, root=document) => root.querySelector(sel);
-    const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+// --- Helpers & state ---
+const $ = (sel, root=document) => root.querySelector(sel);
+const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
 
-// --- Scoring unifié : barème & agrégateur ---
-const ORDER_POINTS = { '1':10 };
-const MATCH_POINTS = { '2':5, '4':3, '6':3, '7':4, '10':4 };
-const ERR_POINTS   = { '5':3 };
-// QCM stockés avec ces clés (selon les IDs de feedback ou logique existante)
-const QCM_POINTS  = { 'ex3':3, 'ex4':1, 'ex5q':2, 'ex6q':2, 'ex8a':1, 'ex8b':2 };
+const exercises = $$('.exercise');
+const scoreEl = $('#score');
+const totalEl = $('#total');
+const prevBtn = $('#prevBtn');
+const nextBtn = $('#nextBtn');
+const resetBtn = $('#resetBtn');
+const exportBtn = $('#exportBtn');
 
-function computeAggregatedScore(res){
-  const taken = new Set();
-  let sum = 0;
-  for(const [k,v] of Object.entries(res||{})){
-    if(!v) continue;
-    // EX1 ordre
-    let m = k.match(/^ex(1)_order$/);
-    if(m){
-      const key = `ex${m[1]}_order`;
-      if(taken.has(key)) continue;
-      const pts = ORDER_POINTS[m[1]]||0;
-      if(pts){ sum += Math.min(Number(v)||0, pts); taken.add(key); }
-      continue;
-    }
-    // Appariements
-    m = k.match(/^ex(2|4|6|7|10)_match$/);
-    if(m){
-      const exId = m[1];
-      const key = `ex${exId}_match`;
-      if(taken.has(key)) continue;
-      const pts = MATCH_POINTS[exId]||0;
-      if(pts){ sum += Math.min(Number(v)||0, pts); taken.add(key); }
-      continue;
-    }
-    // Ex5 incohérences
-    if(k==='ex5_err'){
-      if(taken.has('ex5_err')) continue;
-      const pts = ERR_POINTS['5']||0;
-      if(pts){ sum += Math.min(Number(v)||0, pts); taken.add('ex5_err'); }
-      continue;
-    }
-    // QCM (clés explicites)
-    if(QCM_POINTS.hasOwnProperty(k)){
-      if(taken.has(k)) continue;
-      const pts = QCM_POINTS[k]||0;
-      if(pts){ sum += Math.min(Number(v)||0, pts); taken.add(k); }
-      continue;
-    }
-    // Clés inconnues ignorées (évite les doublons)
-  }
-  return sum;
+let current = 0;
+const APP_VERSION = '1.2.0';
+let results = {};
+
+// Charger les résultats sauvegardés
+try {
+  results = JSON.parse(localStorage.getItem('logi_results') || '{}');
+} catch(e) {
+  results = {};
 }
 
+// Vérifier la version
+const storedVer = localStorage.getItem('logi_version');
+if(storedVer !== APP_VERSION) {
+  localStorage.removeItem('logi_results');
+  results = {};
+  localStorage.setItem('logi_version', APP_VERSION);
+}
 
-    const exercises = $$('.exercise');
-    const scoreEl = $('#score');
-    const totalEl = $('#total');
-    const prevBtn = $('#prevBtn');
-    const nextBtn = $('#nextBtn');
-    const resetBtn = $('#resetBtn');
-    const exportBtn = $('#exportBtn');
+function totalPoints() {
+  return exercises.reduce((s, ex) => s + Number(ex.dataset.points || 0), 0);
+}
 
-    let current = 0;
-    const APP_VERSION='1.5.4';
-    let results = (function(){ try{ return JSON.parse(localStorage.getItem('logi_results')||'{}'); }catch(e){ return {}; } })();
-window.results = results;
-    try{ results = JSON.parse(localStorage.getItem('logi_results')||'{}'); }catch(e){ results = {}; }
-    /* keep scores across versions */
-localStorage.setItem('logi_version', APP_VERSION);
+function save() {
+  localStorage.setItem('logi_results', JSON.stringify(results));
+  localStorage.setItem('logi_version', APP_VERSION);
+}
 
-    function totalPoints(){
-      return exercises.reduce((s,ex)=>s+Number(ex.dataset.points||0),0);
-    }
-    totalEl.textContent = totalPoints();
+function updateScore() {
+  const sum = Object.values(results).reduce((a, b) => a + Number(b || 0), 0);
+  scoreEl.textContent = sum;
+  totalEl.textContent = totalPoints();
+}
 
-    function save(){ window.results = results; localStorage.setItem('logi_results', JSON.stringify(window.results)); localStorage.setItem('logi_version', APP_VERSION); }
-
-    function updateScore(){
-      const sum = computeAggregatedScore(window.results||{});
-      scoreEl.textContent = sum;
-    }
-
-    function unlockSolutions(ex){
-      // Rend visibles les <details class="sol"> de l'exercice passé
-      $$('details.sol[aria-disabled="true"]', ex).forEach(d=>d.setAttribute('aria-disabled','false'));
-      $$('details.sol', ex).forEach(d=>{ if(d.getAttribute('aria-disabled')==='false'){ d.style.display='block'; } });
-    }
-
-    function show(i){
-      exercises.forEach((ex,idx)=>ex.classList.toggle('active', idx===i));
-      current=i;
-      prevBtn.disabled = i===0;
-      nextBtn.disabled = i===exercises.length-1;
-      setTimeout(()=>{
-        const t = exercises[i].querySelector('.title');
-        if(t) t.scrollIntoView({behavior:'smooth',block:'start'});
-      },50);
-    }
-
-    prevBtn.addEventListener('click',()=>show(Math.max(0,current-1)));
-    nextBtn.addEventListener('click',()=>show(Math.min(exercises.length-1,current+1)));
-
-    resetBtn.addEventListener('click',()=>{
-      if(!confirm('Réinitialiser toutes les réponses ?')) return;
-      localStorage.removeItem('logi_results');
-      results={};
-      location.reload();
-    });
-
-    exportBtn.addEventListener('click',()=>{
-      const blob = new Blob([JSON.stringify({date:new Date().toISOString(),results},null,2)],{type:'application/json'});
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'resultats-logigrammes.json';
-      a.click();
-      setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
-    });
-
-    // --- EX1: shuffle + sortable order ---
-    (function(){
-      const list = $('#orderList');
-      if(!list) return;
-      // --- Mélange robuste (Fisher–Yates) + anti-cas "déjà trié" ---
-      const items = Array.from(list.querySelectorAll('.chip'));
-      const correctOrder = ['1','2','3','4','5','6','7','8','9','10'];
-
-      function shuffleArray(arr){
-        const a = arr.slice();
-        for(let i = a.length - 1; i > 0; i--){
-          const j = Math.floor(Math.random() * (i + 1));
-          [a[i], a[j]] = [a[j], a[i]];
-        }
-        return a;
-      }
-
-      let shuffled = shuffleArray(items);
-      let attempt = 0;
-      while (shuffled.map(li => li.dataset.key).join(',') === correctOrder.join(',') && attempt < 5) {
-        shuffled = shuffleArray(items);
-        attempt++;
-      }
-      shuffled.forEach(el=>list.appendChild(el));
-let dragEl = null;
-      list.addEventListener('dragstart', (e)=>{
-        const li = e.target.closest('.chip');
-        if(!li) return;
-        dragEl = li; li.classList.add('dragging');
-        e.dataTransfer.effectAllowed='move';
-      });
-      list.addEventListener('dragend', (e)=>{
-        const li = e.target.closest('.chip');
-        if(li) li.classList.remove('dragging');
-        dragEl = null;
-      });
-      list.addEventListener('dragover', (e)=>{
-        e.preventDefault();
-        const afterEl = getDragAfterEl(list, e.clientY);
-        if(!dragEl) return;
-        if(afterEl) list.insertBefore(dragEl, afterEl);
-        else list.appendChild(dragEl);
-      });
-
-      function getDragAfterEl(container, y){
-        const els = [...container.querySelectorAll('.chip:not(.dragging)')];
-        return els.reduce((closest, child)=>{
-          const box = child.getBoundingClientRect();
-          const offset = y - box.top - box.height/2;
-          if(offset < 0 && offset > closest.offset) return {offset:offset, element:child};
-          else return closest;
-        }, {offset:Number.NEGATIVE_INFINITY}).element;
-      }
-
-      $('[data-check-order]').addEventListener('click',()=>{
-        const order = [...list.querySelectorAll('.chip')].map(li=>li.dataset.key);
-        const correct = order.join(',') === correctOrder.join(',');
-        const ex = list.closest('.exercise');
-        const id = ex.dataset.ex;
-        const resKey = 'ex' + id + '_order';
-        if(Object.prototype.hasOwnProperty.call(results, resKey)){
-          const fb = $('#fb1'); if(fb){ fb.textContent='Déjà validé.'; fb.className='feedback good'; }
-          return;
-        }
-        const pts = correct ? Number(ex.dataset.points) : 0;
-        results[resKey] = pts;
-        save();
-        updateScore();
-        const fb = $('#fb1');
-        if(fb){
-          fb.textContent = correct ? '✓ Bon ordre !' : '✗ Ordre incorrect. Réessaie.';
-          fb.className = 'feedback ' + (correct ? 'good' : 'bad');
-        }
-        if(correct) unlockSolutions(ex);
-      });
-    })();
-
-    
-    // --- EX2, EX4, EX6, EX7, EX10: drag & drop matching (first-try scoring per exercise) ---
-    (function(){
-      const dragItems = $$('.label[draggable="true"]');
-      let dragSrc = null;
-      dragItems.forEach(el=>{
-        el.addEventListener('dragstart', (e)=>{
-          dragSrc = el;
-          e.dataTransfer.effectAllowed = 'move';
-          e.dataTransfer.setData('text/plain', el.dataset.key);
-        });
-        el.addEventListener('dragend', ()=> dragSrc = null);
-      });
-
-      const zones = $$('.zone[data-accept]');
-      
-zones.forEach(zone=>{
-  zone.addEventListener('dragover', e=>{
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
+function unlockSolutions(ex) {
+  $$('details.sol[aria-disabled="true"]', ex).forEach(d => {
+    d.setAttribute('aria-disabled', 'false');
+    d.style.display = 'block';
   });
-  zone.addEventListener('drop', e=>{
-    e.preventDefault();
-    const key = e.dataTransfer.getData('text/plain');
-    if(!key) return;
-    const ex = zone.closest('.exercise');
-    if(!ex) return;
-    const labelsInEx = $$('.label[draggable="true"]', ex);
-    const label = labelsInEx.find(el=>el.dataset.key===key);
-    if(!label) return;
+}
 
-    // Free any other zone using this label
-    const occupiedByThis = ex.querySelector(`.zone[data-filled="${key}"]`);
-    if(occupiedByThis && occupiedByThis !== zone){
-      occupiedByThis.textContent = '';
-      occupiedByThis.classList.remove('filled');
-      occupiedByThis.removeAttribute('data-filled');
-    }
-
-    // Return previous occupant of this zone to the pool
-    const prevKey = zone.dataset.filled;
-    if(prevKey){
-      const prevLabel = labelsInEx.find(el=>el.dataset.key===prevKey);
-      if(prevLabel) prevLabel.style.display = '';
-    }
-
-    // Assign new label to this zone (allow wrong placements)
-    zone.textContent = label.textContent;
-    zone.dataset.filled = key;
-    zone.classList.add('filled');
-    label.style.display = 'none';
+function show(i) {
+  exercises.forEach((ex, idx) => {
+    ex.classList.toggle('active', idx === i);
   });
+  current = i;
+  prevBtn.disabled = i === 0;
+  nextBtn.disabled = i === exercises.length - 1;
+  
+  setTimeout(() => {
+    const t = exercises[i].querySelector('.title');
+    if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 50);
+}
+
+// Navigation
+prevBtn.addEventListener('click', () => show(Math.max(0, current - 1)));
+nextBtn.addEventListener('click', () => show(Math.min(exercises.length - 1, current + 1)));
+
+resetBtn.addEventListener('click', () => {
+  if (!confirm('Réinitialiser toutes les réponses ?')) return;
+  localStorage.removeItem('logi_results');
+  results = {};
+  location.reload();
 });
-$$('[data-check-match]').forEach(btn=>{
-        btn.addEventListener('click', e=>{
-          const ex = e.target.closest('.exercise');
-          if(!ex) return;
-          const id = ex.dataset.ex;
-          const resKey = 'ex' + id + '_match';
 
-          // Scoring only on first validation
-          if(Object.prototype.hasOwnProperty.call(results, resKey)){
-            const fb = ex.querySelector('.feedback');
-            if(fb){ fb.textContent = 'Déjà validé.'; fb.className = 'feedback good'; }
-            return;
-          }
+exportBtn.addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify({ date: new Date().toISOString(), results }, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'resultats-logigrammes.json';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+});
 
-          const zones = $$('.zone[data-accept]', ex);
-          const correct = zones.every(zone => zone.dataset.filled === zone.dataset.accept);
-          const pts = correct ? Number(ex.dataset.points) : 0;
-          results[resKey] = pts;
-          save(); updateScore();
-
-          const fb = ex.querySelector('.feedback');
-          if(fb){
-            fb.textContent = correct ? '✓ Bon appariement !' : '✗ Appariement incorrect. Réessaie.';
-            fb.className = 'feedback ' + (correct ? 'good' : 'bad');
-          }
-          if(correct) unlockSolutions(ex);
-        });
-      });
-    })();
-
-
+// --- EX1: Tri des étapes ---
+(function() {
+  const list = $('#orderList');
+  if (!list) return;
+  
+  // Mélanger les éléments
+  const items = Array.from(list.querySelectorAll('.chip'));
+  const correctOrder = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+  
+  function shuffleArray(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+  
+  let shuffled = shuffleArray(items);
+  let attempt = 0;
+  while (shuffled.map(li => li.dataset.key).join(',') === correctOrder.join(',') && attempt < 5) {
+    shuffled = shuffleArray(items);
+    attempt++;
+  }
+  
+  // Vider et réinsérer les éléments mélangés
+  list.innerHTML = '';
+  shuffled.forEach(el => list.appendChild(el));
+  
+  // Drag and drop
+  let dragEl = null;
+  
+  list.addEventListener('dragstart', (e) => {
+    const li = e.target.closest('.chip');
+    if (!li) return;
+    dragEl = li;
+    li.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+  });
+  
+  list.addEventListener('dragend', (e) => {
+    const li = e.target.closest('.chip');
+    if (li) li.classList.remove('dragging');
+    dragEl = null;
+  });
+  
+  list.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    const afterEl = getDragAfterEl(list, e.clientY);
+    if (!dragEl) return;
+    if (afterEl) {
+      list.insertBefore(dragEl, afterEl);
+    } else {
+      list.appendChild(dragEl);
+    }
+  });
+  
+  function getDragAfterEl(container, y) {
+    const els = [...container.querySelectorAll('.chip:not(.dragging)')];
+    return els.reduce((closest, child) => {
+      const box = child.getBoundingClientRect();
+      const offset = y - box.top - box.height / 2;
+      if (offset < 0 && offset > closest.offset) {
+        return { offset: offset, element: child };
+      } else {
+        return closest;
+      }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+  }
+  
+  // Vérification
+  $('[data-check-order]').addEventListener('click', () => {
+    const order = [...list.querySelectorAll('.chip')].map(li => li.dataset.key);
+    const correct = order.join(',') === correctOrder.join(',');
+    const ex = list.closest('.exercise');
+    const id = ex.dataset.ex;
+    const resKey = 'ex' + id;
     
-    // --- EX3, EX4, EX5, EX6, EX8: QCM (scoped to nearest .qcm) + scoring only on first validation ---
-    (function(){
-      $$('[data-check-qcm]').forEach(btn=>{
-        btn.addEventListener('click', e=>{
-          const qcm = e.target.closest('.qcm');
-          const ex  = e.target.closest('.exercise');
-          if(!qcm || !ex) return;
-          const id  = ex.dataset.ex;                // e.g., "8"
-          const correct = e.target.dataset.correct; // expected value e.g., "b"
-          const radios = qcm.querySelectorAll('input[type=radio]');
-          const selected = Array.from(radios).find(r=>r.checked);
-          const isCorrect = !!selected && selected.value === correct;
+    if (results[resKey] !== undefined) {
+      const fb = $('#fb1');
+      if (fb) {
+        fb.textContent = 'Déjà validé.';
+        fb.className = 'feedback good';
+      }
+      return;
+    }
+    
+    const pts = correct ? Number(ex.dataset.points) : 0;
+    results[resKey] = pts;
+    save();
+    updateScore();
+    
+    const fb = $('#fb1');
+    if (fb) {
+      fb.textContent = correct ? '✓ Bon ordre !' : '✗ Ordre incorrect. Réessaie.';
+      fb.className = 'feedback ' + (correct ? 'good' : 'bad');
+    }
+    
+    if (correct) unlockSolutions(ex);
+  });
+})();
 
-          // Determine a stable sub-key for this QCM (use nearest feedback id if present)
-          const fbEl = qcm.querySelector('.feedback');
-          const fbId = fbEl && fbEl.id ? fbEl.id : ( 'fb' + id + 'q' );
-          const resKey = 'ex' + fbId.replace(/^fb/, '');
-
-          // Scoring only on the first validation for this QCM
-          if(Object.prototype.hasOwnProperty.call(results, resKey)){
-            // Already validated once: do not change score
-            if(fbEl){
-              fbEl.textContent = isCorrect ? 'Déjà validé.' : 'Déjà validé (score figé).';
-              fbEl.className = 'feedback ' + (isCorrect ? 'good' : 'bad');
-            }
-            return;
-          }
-
-          const pts = isCorrect ? Number(ex.dataset.points) : 0;
-          results[resKey] = pts;
-          save(); updateScore();
-
-          if(fbEl){
-            fbEl.textContent = isCorrect ? '✓ Bonne réponse !' : '✗ Réponse incorrecte. Réessaie.';
-            fbEl.className = 'feedback ' + (isCorrect ? 'good' : 'bad');
-          }
-          if(isCorrect) unlockSolutions(ex);
-        });
-      });
-    })();
-
-
-    // --- EX5: détection d'erreurs ---
-    (function(){
-      const btn = $('#checkErr');
-      if(!btn) return;
-      btn.addEventListener('click',()=>{
-        const ex = btn.closest('.exercise');
-        const id = ex.dataset.ex;
-        const checks = $$('.err:checked', ex);
-        const correct = checks.length===2 && checks[0].value==='ko1' && checks[1].value==='ko2';
-        const pts = correct ? Number(ex.dataset.points) : 0;
-        results['ex'+id+'_err'] = pts;
-        save();
-        updateScore();
-        const fb = $('#fb5');
-        if(fb){
-          fb.textContent = correct ? '✓ Erreurs bien identifiées !' : '✗ Pas tout à fait. Réessaie.';
-          fb.className = 'feedback ' + (correct ? 'good' : 'bad');
+// --- Drag & drop matching pour EX2, EX4, EX6, EX7, EX10 ---
+(function() {
+  const dragItems = $$('.label[draggable="true"]');
+  let dragSrc = null;
+  
+  dragItems.forEach(el => {
+    el.addEventListener('dragstart', (e) => {
+      dragSrc = el;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', el.dataset.key);
+    });
+    
+    el.addEventListener('dragend', () => {
+      dragSrc = null;
+    });
+  });
+  
+  const zones = $$('.zone[data-accept]');
+  
+  zones.forEach(zone => {
+    zone.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    });
+    
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      const key = e.dataTransfer.getData('text/plain');
+      if (!key) return;
+      
+      const accepted = zone.dataset.accept;
+      if (accepted !== key) return;
+      
+      const label = dragItems.find(el => el.dataset.key === key);
+      if (!label) return;
+      
+      zone.innerHTML = '<span class="zone-chip" draggable="true" data-key="' + key + '">' + label.textContent + '</span>';
+      zone.dataset.filled = key;
+      zone.classList.add('filled');
+      label.style.display = 'none';
+    });
+  });
+  
+  $$('[data-check-match]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      const ex = e.target.closest('.exercise');
+      if (!ex) return;
+      
+      const id = ex.dataset.ex;
+      const resKey = 'ex' + id;
+      
+      if (results[resKey] !== undefined) {
+        const fb = ex.querySelector('.feedback');
+        if (fb) {
+          fb.textContent = 'Déjà validé.';
+          fb.className = 'feedback good';
         }
-        if(correct) unlockSolutions(ex);
-      });
-    })();
+        return;
+      }
+      
+      const zones = $$('.zone[data-accept]', ex);
+      const correct = zones.every(zone => zone.dataset.filled === zone.dataset.accept);
+      const pts = correct ? Number(ex.dataset.points) : 0;
+      
+      results[resKey] = pts;
+      save();
+      updateScore();
+      
+      const fb = ex.querySelector('.feedback');
+      if (fb) {
+        fb.textContent = correct ? '✓ Bon appariement !' : '✗ Appariement incorrect. Réessaie.';
+        fb.className = 'feedback ' + (correct ? 'good' : 'bad');
+      }
+      
+      if (correct) unlockSolutions(ex);
+    });
+  });
+})();
 
-    // --- Initialisation ---
-    results = window.results || results; updateScore();
-    show(0);
+// --- QCM pour EX3, EX4, EX5, EX6, EX8 ---
+(function() {
+  $$('[data-check-qcm]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      const qcm = e.target.closest('.qcm');
+      const ex = e.target.closest('.exercise');
+      if (!qcm || !ex) return;
+      
+      const id = ex.dataset.ex;
+      const correctValue = e.target.dataset.correct;
+      const radios = qcm.querySelectorAll('input[type=radio]');
+      const selected = Array.from(radios).find(r => r.checked);
+      const isCorrect = !!selected && selected.value === correctValue;
+      
+      // Créer une clé unique pour chaque QCM
+      const qcmIndex = Array.from($$('[data-check-qcm]', ex)).indexOf(btn);
+      const resKey = 'ex' + id + '_qcm' + (qcmIndex > 0 ? qcmIndex : '');
+      
+      if (results[resKey] !== undefined) {
+        const fb = qcm.querySelector('.feedback');
+        if (fb) {
+          fb.textContent = isCorrect ? 'Déjà validé.' : 'Déjà validé (score figé).';
+          fb.className = 'feedback ' + (isCorrect ? 'good' : 'bad');
+        }
+        return;
+      }
+      
+      const pts = isCorrect ? Number(ex.dataset.points) : 0;
+      results[resKey] = pts;
+      save();
+      updateScore();
+      
+      const fb = qcm.querySelector('.feedback');
+      if (fb) {
+        fb.textContent = isCorrect ? '✓ Bonne réponse !' : '✗ Réponse incorrecte. Réessaie.';
+        fb.className = 'feedback ' + (isCorrect ? 'good' : 'bad');
+      }
+      
+      if (isCorrect) unlockSolutions(ex);
+    });
+  });
+})();
+
+// --- EX5: Détection d'erreurs ---
+(function() {
+  const btn = $('#checkErr');
+  if (!btn) return;
+  
+  btn.addEventListener('click', () => {
+    const ex = btn.closest('.exercise');
+    const id = ex.dataset.ex;
+    const resKey = 'ex' + id;
+    
+    if (results[resKey] !== undefined) {
+      const fb = $('#fb5');
+      if (fb) {
+        fb.textContent = 'Déjà validé.';
+        fb.className = 'feedback good';
+      }
+      return;
+    }
+    
+    const checks = $$('.err:checked', ex);
+    const correct = checks.length === 2 && 
+                   checks.some(c => c.value === 'ko1') && 
+                   checks.some(c => c.value === 'ko2');
+    const pts = correct ? Number(ex.dataset.points) : 0;
+    
+    results[resKey] = pts;
+    save();
+    updateScore();
+    
+    const fb = $('#fb5');
+    if (fb) {
+      fb.textContent = correct ? '✓ Erreurs bien identifiées !' : '✗ Pas tout à fait. Réessaie.';
+      fb.className = 'feedback ' + (correct ? 'good' : 'bad');
+    }
+    
+    if (correct) unlockSolutions(ex);
+  });
+})();
+
+// Initialisation
+totalEl.textContent = totalPoints();
+updateScore();
+show(0);
   </script>
 </body>
 </html>
