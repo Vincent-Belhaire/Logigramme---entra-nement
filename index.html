@@ -94,7 +94,7 @@
     <div class="wrap" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
       <h1>Logigrammes – Exercices interactifs</h1>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-        <span class="pill" id="scorePill">Score : <strong id="score">0</strong> / <span id="total">0</span></div>
+       <span class="pill" id="scorePill">Score : <strong id="score">0</strong> / <span id="total">0</span></span>
         <button class="btn" id="prevBtn" aria-label="Exercice précédent">⟵ Précédent</button>
         <button class="btn primary" id="nextBtn" aria-label="Exercice suivant">Suivant ⟶</button>
         <button class="btn" id="resetBtn" title="Réinitialiser tout">Remise à zéro</button>
@@ -477,12 +477,14 @@
       const ex = list.closest('.exercise');
       const id = ex.dataset.ex;
       const resKey = 'ex' + id + '_order';
-      if(Object.prototype.hasOwnProperty.call(results, resKey)){
+   const maxPts = Number(ex.dataset.points) || 0;
+      const prev = Number(results[resKey] || 0);
+      if(maxPts > 0 && prev >= maxPts){
         const fb = $('#fb1'); if(fb){ fb.textContent='Déjà validé.'; fb.className='feedback good'; }
         return;
       }
-      const pts = correct ? Number(ex.dataset.points) : 0;
-      results[resKey] = pts; save(); updateScore();
+      const pts = correct ? maxPts : 0;
+      if(pts > prev){ results[resKey] = pts; save(); updateScore(); }
       const fb = $('#fb1');
       if(fb){ fb.textContent = correct ? '✓ Bon ordre !' : '✗ Ordre incorrect. Réessaie.'; fb.className = 'feedback ' + (correct ? 'good' : 'bad'); }
       if(correct) unlockSolutions(ex);
@@ -520,13 +522,15 @@
       btn.addEventListener('click', e=>{
         const ex = e.target.closest('.exercise'); if(!ex) return;
         const id = ex.dataset.ex; const resKey = 'ex' + id + '_match';
-        if(Object.prototype.hasOwnProperty.call(results, resKey)){
+       const maxPts = Number(ex.dataset.points) || 0;
+        const prev = Number(results[resKey] || 0);
+        if(maxPts > 0 && prev >= maxPts){
           const fb = ex.querySelector('.feedback'); if(fb){ fb.textContent='Déjà validé.'; fb.className='feedback good'; } return;
         }
         const zones = $$('.zone[data-accept]', ex);
         const correct = zones.every(z => z.dataset.filled === z.dataset.accept);
-        const pts = correct ? Number(ex.dataset.points) : 0;
-        results[resKey] = pts; save(); updateScore();
+        const pts = correct ? maxPts : 0;
+        if(pts > prev){ results[resKey] = pts; save(); updateScore(); }
         const fb = ex.querySelector('.feedback');
         if(fb){ fb.textContent = correct ? '✓ Bon appariement !' : '✗ Appariement incorrect. Réessaie.'; fb.className = 'feedback ' + (correct?'good':'bad'); }
         if(correct) unlockSolutions(ex);
@@ -548,12 +552,14 @@
         const fbEl = qcm.querySelector('.feedback');
         const fbId = fbEl && fbEl.id ? fbEl.id : ( 'fb' + id + 'q' );
         const resKey = 'ex' + fbId.replace(/^fb/, '');
-        if(Object.prototype.hasOwnProperty.call(results, resKey)){
-          if(fbEl){ fbEl.textContent = isCorrect ? 'Déjà validé.' : 'Déjà validé (score figé).'; fbEl.className='feedback ' + (isCorrect?'good':'bad'); }
+         const maxPts = Number(ex.dataset.points) || 0;
+        const prev = Number(results[resKey] || 0);
+        if(maxPts > 0 && prev >= maxPts){
+          if(fbEl){ fbEl.textContent = 'Déjà validé.'; fbEl.className='feedback good'; }
           return;
         }
-        const pts = isCorrect ? Number(ex.dataset.points) : 0;
-        results[resKey] = pts; save(); updateScore();
+       const pts = isCorrect ? maxPts : 0;
+        if(pts > prev){ results[resKey] = pts; save(); updateScore(); }
         if(fbEl){ fbEl.textContent = isCorrect ? '✓ Bonne réponse !' : '✗ Réponse incorrecte. Réessaie.'; fbEl.className='feedback ' + (isCorrect?'good':'bad'); }
         if(isCorrect) unlockSolutions(ex);
       });
