@@ -81,7 +81,12 @@
     .exercise[data-ex="6"] .zone{width:100%;min-height:64px}
   
     .qcm .feedback{display:inline-block;margin-left:10px}
-  </style>
+  
+/* Tap-to-place selection state */
+.label.is-selected{ outline:3px solid var(--accent); outline-offset:2px; }
+.zone.is-target{ box-shadow:0 0 0 3px rgba(14,165,233,.35) inset; }
+
+</style>
 </head>
 <body>
   <header>
@@ -401,7 +406,7 @@
     const exportBtn = $('#exportBtn');
 
     let current = 0;
-    const APP_VERSION='1.5.0';
+    const APP_VERSION='1.5.1';
     let results = (function(){ try{ return JSON.parse(localStorage.getItem('logi_results')||'{}'); }catch(e){ return {}; } })();
 window.results = results;
     try{ results = JSON.parse(localStorage.getItem('logi_results')||'{}'); }catch(e){ results = {}; }
@@ -667,6 +672,76 @@ let dragEl = null;
     // --- Initialisation ---
     results = window.results || results; updateScore();
     show(0);
-  </script>
+  
+// --- Tap-to-Place fallback (for tablets where drag may be blocked) ---
+(function(){
+  const isTouch = matchMedia('(pointer:coarse)').matches || 'ontouchstart' in window;
+  if(!isTouch) return;
+  let selectedLabel = null;
+
+  function clearHighlights(ex){
+    ex.querySelectorAll('.label.is-selected').forEach(el=>el.classList.remove('is-selected'));
+    ex.querySelectorAll('.zone.is-target').forEach(z=>z.classList.remove('is-target'));
+  }
+
+  document.addEventListener('click', function(e){
+    const ex = e.target.closest('.exercise'); if(!ex) return;
+
+    // tap on a label (pool) -> select
+    const label = e.target.closest('.label[draggable]');
+    if(label && ex.contains(label)){
+      e.preventDefault();
+      if(selectedLabel === label){ // toggle off
+        selectedLabel = null;
+        clearHighlights(ex);
+        return;
+      }
+      selectedLabel = label;
+      clearHighlights(ex);
+      label.classList.add('is-selected');
+      // highlight all zones
+      ex.querySelectorAll('.zone[data-accept]').forEach(z=>z.classList.add('is-target'));
+      return;
+    }
+
+    // tap on a zone -> if a label is selected, place it here (allow overwrite)
+    const zone = e.target.closest('.zone[data-accept]');
+    if(zone && ex.contains(zone) && selectedLabel){
+      e.preventDefault();
+      const key = selectedLabel.dataset.key;
+      const labels = Array.from(ex.querySelectorAll('.label[draggable]'));
+      // free previous zone occupied by this key
+      const prev = ex.querySelector('.zone[data-filled="'+key+'"]');
+      if(prev && prev !== zone){
+        prev.innerHTML = ''; prev.classList.remove('filled'); prev.removeAttribute('data-filled');
+      }
+      // return previous occupant of this zone
+      const prevKey = zone.dataset.filled;
+      if(prevKey){
+        const prevLabel = labels.find(l=>l.dataset.key===prevKey);
+        if(prevLabel) prevLabel.style.display='';
+      }
+      // place
+      zone.innerHTML = '<span class="zone-chip" draggable="true" data-key="'+key+'">'+selectedLabel.textContent+'</span>';
+      zone.dataset.filled = key;
+      zone.classList.add('filled');
+      selectedLabel.style.display='none';
+
+      // cleanup
+      selectedLabel = null;
+      clearHighlights(ex);
+      if(typeof normalizeExercise === 'function') normalizeExercise(ex);
+      return;
+    }
+
+    // tap outside -> clear selection
+    if(selectedLabel){
+      selectedLabel = null;
+      clearHighlights(ex);
+    }
+  }, {passive:false});
+})();
+
+</script>
 </body>
 </html>
